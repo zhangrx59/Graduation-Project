@@ -1,0 +1,21 @@
+{
+  "api_config": {
+    "base_url": "https://api.siliconflow.cn/v1",
+    "model_type": "Qwen/Qwen3-VL-235B-A22B-Instruct",
+    "api_keys": [
+      "sk-uhobwdodfqwkayapmgposlzsykswpuzaunzebblhcmgyrage",
+      "sk-oygtgdajeomhixrhxmdykexazqksceutjwybeasvpgjrjhij",
+      "sk-vmqzvqrrgqwcuurdhucdyaruslbpyuhdiftdlynsykywbckh",
+      "sk-gmmqgdsgermflwfkwjfkrabgqwexqdcyykmqxfxnncymwdjk",
+
+    ],
+    "timeout": 30,
+    "max_retries": 3
+  },
+  "analysis_config": {
+    "folder_path": "C:/Users/zhangrx59/Desktop/photos",
+    "prompt": "这是一张皮肤病的图像，请你基于这张图片判断病人得了什么病，可选类别包括：光化性角化病(akiec)、基底细胞癌(bcc)、良性角化病(bkl)、皮肤纤维瘤(df)、色素痣(nv)、血管病变(vasc)的一种。请给出推理过程和最终结论(以字母代替）。",
+    "supported_formats": [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".gif"],
+    "max_workers": 4
+  }
+}
