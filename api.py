@@ -12,18 +12,18 @@ client = OpenAI(api_key="sk-uhobwdodfqwkayapmgposlzsykswpuzaunzebblhcmgyrage",
                 base_url="https://api.siliconflow.cn/v1")
 
 # 将本地图像转换为base64
-image_path = "C:/Users/zhangrx59/Desktop/a.jpg"  # 使用正斜杠
+image_path = "C:/Users/zhangrx59/Desktop/ISIC_0024306.jpg"  # 使用正斜杠
 base64_image = encode_image_to_base64(image_path)
 
 
 response = client.chat.completions.create(
     # model='Pro/deepseek-ai/DeepSeek-R1',
-    model="Qwen/Qwen3-VL-235B-A22B-Thinking",
+    model="Qwen/Qwen3-VL-235B-A22B-Instruct",
     messages=[
         {
             "role": "user",
             "content": [
-                {"type": "text", "text": "描述这张图片"},
+                {"type": "text", "text": "这是一张皮肤病的图像，请你基于这张图片，判断病人得了什么病（光化性角化病，基底细胞癌，良性角化病，皮肤纤维瘤，色素痣，血管病变的一种）"},
                 {
                     "type": "image_url",
                     "image_url": {

@@ -18,7 +18,7 @@ base64_image = encode_image_to_base64(image_path)
 
 response = client.chat.completions.create(
     # model='Pro/deepseek-ai/DeepSeek-R1',
-    model="Qwen/Qwen3-VL-235B-A22B-Thinking",
+    model="Qwen/Qwen3-VL-235B-A22B-Instruct",
     messages=[
         {
             "role": "user",
