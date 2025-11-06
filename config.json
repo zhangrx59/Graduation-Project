@@ -21,7 +21,7 @@
       "sk-fyjwilrmshievjjwwdtfvstlexlndwtwokhpjxxlalfrvgtp"
     ],
     "timeout": 30,
-    "max_retries": 3
+    "max_retries": 2
   },
   "analysis_config": {
     "folder_path": "C:/Users/zhangrx59/Desktop/photos",

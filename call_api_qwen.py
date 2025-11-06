@@ -399,7 +399,7 @@ def analyze_skin_images_multimodal(config_path="config.json"):
     return results, patient_df
 
 
-def create_multimodal_summary(results, patient_df, output_dir="multimodal_outputs"):
+def create_multimodal_summary(results, patient_df, output_dir="multimodel_outputs_qwen"):
     """创建多模态分析汇总文件，包含诊断正确性分析"""
     summary_path = Path(output_dir) / "multimodal_analysis_summary.txt"
 
