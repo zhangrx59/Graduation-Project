@@ -8,9 +8,10 @@ import re
 from pathlib import Path
 from multiprocessing import Pool
 from openai import OpenAI
+from collections import Counter
 
 
-def load_config(config_path="config.json"):
+def load_config(config_path="config2.json"):
     """从JSON文件加载配置"""
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
@@ -31,7 +32,7 @@ def encode_image_to_base64(image_path):
 
 def load_patient_data(csv_path):
     """
-    加载患者临床数据
+    加载患者临床数据，包括真实标签
     """
     try:
         df = pd.read_csv(csv_path)
@@ -105,10 +106,10 @@ def create_multimodal_prompt(clinical_data, config):
 def find_patient_data_by_image_id(patient_df, image_filename, image_id_column='image_id'):
     """
     根据图片文件名查找对应的患者数据
-    只返回 age, sex, localization 三列数据，过滤掉dx和dx_type
+    返回临床数据和真实标签，但真实标签不用于提示词
     """
     if patient_df is None:
-        return None
+        return None, None
 
     # 从图片文件名提取image_id（去掉扩展名）
     image_id = Path(image_filename).stem
@@ -117,27 +118,37 @@ def find_patient_data_by_image_id(patient_df, image_filename, image_id_column='i
     if image_id_column in patient_df.columns:
         match = patient_df[patient_df[image_id_column] == image_id]
         if not match.empty:
-            # 只返回需要的三列数据，过滤掉dx和dx_type
+            # 返回临床数据（用于提示词）和真实标签（用于比较）
             clinical_data = match.iloc[0][['age', 'sex', 'localization']].to_dict()
-            return clinical_data
+            true_label = match.iloc[0]['dx']  # 真实标签
+            return clinical_data, true_label
 
-    return None
+    return None, None
 
 
 def extract_diagnosis_from_response(response_text):
     """
-    从大模型响应中提取诊断结果
+    从大模型响应中提取诊断结果 - 保持使用dx:前缀
     """
-    # 定义可能的诊断类别
     diagnosis_codes = ['dx:akiec', 'dx:bcc', 'dx:bkl', 'dx:df', 'dx:nv', 'dx:mel', 'dx:vasc']
 
-    # 在响应文本中查找诊断代码
-    for code in diagnosis_codes:
-        if re.search(r'\b' + code + r'\b', response_text, re.IGNORECASE):
-            return code
+    # 转换为小写便于匹配
+    text_lower = response_text.lower()
 
-    # 如果没有找到明确的诊断代码，返回未知
-    return "unknown"
+    # 查找所有出现的诊断代码
+    found_codes = []
+    for code in diagnosis_codes:
+        if re.search(r'\b' + code + r'\b', text_lower):
+            found_codes.append(code)
+
+    # 根据出现位置和频率判断主要诊断
+    if len(found_codes) == 0:
+        return "unknown"
+    elif len(found_codes) == 1:
+        return found_codes[0]
+    else:
+        # 如果有多个诊断，选择最后一个（通常是最终结论）
+        return found_codes[-1]
 
 
 def analyze_single_image_multimodal(args):
@@ -158,8 +169,8 @@ def analyze_single_image_multimodal(args):
 
     print(f"⚡ [进程{process_id} PID:{pid}] 开始分析: {image_filename}")
 
-    # 查找患者临床数据（只获取 age, sex, localization）
-    clinical_data = find_patient_data_by_image_id(patient_df, image_filename, image_id_column)
+    # 查找患者临床数据和真实标签
+    clinical_data, true_label = find_patient_data_by_image_id(patient_df, image_filename, image_id_column)
 
     # 创建多模态提示词
     multimodal_prompt = create_multimodal_prompt(clinical_data, config)
@@ -187,7 +198,7 @@ def analyze_single_image_multimodal(args):
                                                                                                              'sex'].lower() in [
                                                                                                              'female',
                                                                                                              'f'] else \
-                    clinical_data['sex']
+                        clinical_data['sex']
                     f.write(f"  性别: {sex_display}\n")
                 if 'localization' in clinical_data and pd.notna(clinical_data['localization']):
                     loc_mapping = {
@@ -235,20 +246,35 @@ def analyze_single_image_multimodal(args):
                 reasoning = delta.reasoning_content
                 full_response += reasoning
 
-        # 提取诊断结果
-        diagnosis = extract_diagnosis_from_response(full_response)
+        # 提取诊断结果（带dx:前缀）
+        diagnosis_with_prefix = extract_diagnosis_from_response(full_response)
+
+        # 去除dx:前缀，用于比较
+        diagnosis = diagnosis_with_prefix.replace('dx:', '') if diagnosis_with_prefix.startswith(
+            'dx:') else diagnosis_with_prefix
+
+        # 判断诊断是否正确
+        is_correct = (diagnosis == true_label) if true_label else False
 
         # 写入响应和诊断结果
         with open(output_file, 'a', encoding='utf-8') as f:
             f.write(f"\n大模型完整响应:\n{full_response}\n")
             f.write(f"\n{'=' * 60}\n")
-            f.write(f"提取的诊断结果: {diagnosis}\n")
+            f.write(f"提取的诊断结果(带前缀): {diagnosis_with_prefix}\n")
+            f.write(f"用于比较的诊断代码: {diagnosis}\n")
+            if true_label:
+                f.write(f"真实标签: {true_label}\n")
+                f.write(f"诊断是否正确: {'✅ 正确' if is_correct else '❌ 错误'}\n")
+            else:
+                f.write(f"真实标签: 未找到\n")
+                f.write(f"诊断是否正确: 无法判断\n")
             f.write(f"{'=' * 60}\n")
             f.write(f"\n分析完成\n")
             f.write(f"总响应长度: {len(full_response)} 字符\n")
             f.write(f"结束时间: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
 
-        print(f"✅ [进程{process_id} PID:{pid}] 完成分析: {image_filename} -> {diagnosis}")
+        print(
+            f"✅ [进程{process_id} PID:{pid}] 完成分析: {image_filename} -> {diagnosis} (真实: {true_label}) {'✅' if is_correct else '❌'}")
 
         return {
             "image_name": image_filename,
@@ -256,8 +282,11 @@ def analyze_single_image_multimodal(args):
             "pid": pid,
             "clinical_data_found": clinical_data is not None,
             "clinical_data": clinical_data,
+            "true_label": true_label,  # 新增真实标签
+            "predicted_label": diagnosis,  # 新增预测标签（去除前缀）
+            "predicted_label_with_prefix": diagnosis_with_prefix,  # 新增带前缀的预测标签
+            "is_correct": is_correct,  # 新增正确性判断
             "response": full_response,
-            "diagnosis": diagnosis,  # 新增诊断结果字段
             "status": "success",
             "response_length": len(full_response),
             "output_file": str(output_file)
@@ -276,15 +305,18 @@ def analyze_single_image_multimodal(args):
             "pid": pid,
             "clinical_data_found": False,
             "clinical_data": None,
+            "true_label": None,
+            "predicted_label": "error",
+            "predicted_label_with_prefix": "error",
+            "is_correct": False,
             "response": "",
-            "diagnosis": "error",  # 错误状态
             "status": f"error: {str(e)}",
             "response_length": 0,
             "output_file": str(output_file)
         }
 
 
-def analyze_skin_images_multimodal(config_path="config.json"):
+def analyze_skin_images_multimodal(config_path="config2.json"):
     """
     多模态多进程批量分析
     """
@@ -321,7 +353,7 @@ def analyze_skin_images_multimodal(config_path="config.json"):
     # 准备任务参数
     tasks = []
     api_keys = api_config["api_keys"]
-    output_dir = "multimodal_outputs"
+    output_dir = "multimodel_outputs_gpt5"
     image_id_column = analysis_config.get("image_id_column", "image_id")
 
     for i, image_path in enumerate(image_files):
@@ -367,9 +399,35 @@ def analyze_skin_images_multimodal(config_path="config.json"):
     return results, patient_df
 
 
-def create_multimodal_summary(results, patient_df, output_dir="multimodal_outputs"):
-    """创建多模态分析汇总文件，包含每张图片的诊断结果"""
+def create_multimodal_summary(results, patient_df, output_dir="multimodel_outputs_gpt5"):
+    """创建多模态分析汇总文件，包含诊断正确性分析"""
     summary_path = Path(output_dir) / "multimodal_analysis_summary.txt"
+
+    # 计算准确率统计
+    valid_results = [r for r in results if r["status"] == "success" and r["true_label"] is not None]
+    correct_results = [r for r in valid_results if r["is_correct"]]
+
+    accuracy = len(correct_results) / len(valid_results) if valid_results else 0
+
+    # 各类别准确率统计
+    category_stats = {}
+    for result in valid_results:
+        true_label = result["true_label"]
+        predicted_label = result["predicted_label"]  # 使用去除前缀的版本进行比较
+        is_correct = result["is_correct"]
+
+        if true_label not in category_stats:
+            category_stats[true_label] = {
+                "total": 0,
+                "correct": 0,
+                "predictions": Counter()
+            }
+
+        category_stats[true_label]["total"] += 1
+        category_stats[true_label]["predictions"][predicted_label] += 1
+
+        if is_correct:
+            category_stats[true_label]["correct"] += 1
 
     with open(summary_path, 'w', encoding='utf-8') as f:
         f.write("多模态皮肤图像分析汇总报告\n")
@@ -385,21 +443,26 @@ def create_multimodal_summary(results, patient_df, output_dir="multimodal_output
         f.write(f"结合临床数据: {clinical_count} 张\n")
         f.write(f"临床数据匹配率: {clinical_count / len(results) * 100:.1f}%\n\n")
 
-        # 诊断结果统计
-        diagnosis_stats = {}
-        for result in results:
-            if result["status"] == "success":
-                diagnosis = result["diagnosis"]
-                diagnosis_stats[diagnosis] = diagnosis_stats.get(diagnosis, 0) + 1
-
-        f.write("诊断结果统计:\n")
+        # 准确率统计
+        f.write("诊断准确率统计:\n")
         f.write("-" * 40 + "\n")
-        for diagnosis, count in sorted(diagnosis_stats.items()):
-            f.write(f"{diagnosis}: {count} 张\n")
-        f.write("\n")
+        f.write(f"可评估图片数量: {len(valid_results)} 张\n")
+        f.write(f"正确诊断数量: {len(correct_results)} 张\n")
+        f.write(f"总体准确率: {accuracy:.2%}\n\n")
 
-        # 详细分析情况 - 包含每张图片的诊断结果
-        f.write("详细分析结果:\n")
+        # 各类别准确率
+        f.write("各类别准确率详情:\n")
+        f.write("=" * 80 + "\n")
+        for true_label, stats in sorted(category_stats.items()):
+            category_accuracy = stats["correct"] / stats["total"] if stats["total"] > 0 else 0
+            f.write(f"\n{true_label}:\n")
+            f.write(f"  总数: {stats['total']} 张\n")
+            f.write(f"  正确: {stats['correct']} 张\n")
+            f.write(f"  准确率: {category_accuracy:.2%}\n")
+            f.write(f"  预测分布: {dict(stats['predictions'])}\n")
+
+        # 详细分析情况
+        f.write("\n详细分析结果:\n")
         f.write("=" * 80 + "\n")
 
         for result in results:
@@ -407,30 +470,39 @@ def create_multimodal_summary(results, patient_df, output_dir="multimodal_output
             clinical_icon = "📋" if result["clinical_data_found"] else "⚠️"
 
             f.write(f"\n{status_icon}{clinical_icon} {result['image_name']}\n")
-            f.write(f"诊断结果: {result['diagnosis']}\n")
 
-            if result["clinical_data_found"] and result["clinical_data"]:
-                clinical = result["clinical_data"]
-                f.write(f"临床信息: ")
-                if 'age' in clinical and pd.notna(clinical['age']):
-                    f.write(f"年龄{clinical['age']}岁 ")
-                if 'sex' in clinical and pd.notna(clinical['sex']):
-                    sex_display = "男" if clinical['sex'].lower() in ['male', 'm'] else "女"
-                    f.write(f"{sex_display}性 ")
-                if 'localization' in clinical and pd.notna(clinical['localization']):
-                    loc_mapping = {'back': '背部', 'lower extremity': '下肢', 'face': '面部', 'trunk': '躯干'}
-                    loc_display = loc_mapping.get(clinical['localization'], clinical['localization'])
-                    f.write(f"{loc_display}")
-                f.write("\n")
-
-            f.write(f"处理进程: {result['process_id']}\n")
             if result["status"] == "success":
+                f.write(f"真实标签: {result['true_label'] if result['true_label'] else '未知'}\n")
+                f.write(f"预测标签: {result['predicted_label']}\n")
+
+                if result["true_label"]:
+                    correctness_icon = "✅" if result["is_correct"] else "❌"
+                    f.write(f"诊断结果: {correctness_icon} {'正确' if result['is_correct'] else '错误'}\n")
+                else:
+                    f.write(f"诊断结果: ⚠️ 无法判断正确性\n")
+
+                if result["clinical_data_found"] and result["clinical_data"]:
+                    clinical = result["clinical_data"]
+                    f.write(f"临床信息: ")
+                    if 'age' in clinical and pd.notna(clinical['age']):
+                        f.write(f"年龄{clinical['age']}岁 ")
+                    if 'sex' in clinical and pd.notna(clinical['sex']):
+                        sex_display = "男" if clinical['sex'].lower() in ['male', 'm'] else "女"
+                        f.write(f"{sex_display}性 ")
+                    if 'localization' in clinical and pd.notna(clinical['localization']):
+                        loc_mapping = {'back': '背部', 'lower extremity': '下肢', 'face': '面部', 'trunk': '躯干'}
+                        loc_display = loc_mapping.get(clinical['localization'], clinical['localization'])
+                        f.write(f"{loc_display}")
+                    f.write("\n")
+
+                f.write(f"处理进程: {result['process_id']}\n")
                 f.write(f"响应长度: {result['response_length']} 字符\n")
             else:
                 f.write(f"错误信息: {result['status']}\n")
             f.write("-" * 40 + "\n")
 
     print(f"📋 多模态分析汇总文件: {summary_path}")
+    print(f"📊 诊断准确率: {accuracy:.2%} ({len(correct_results)}/{len(valid_results)})")
 
 
 if __name__ == "__main__":
@@ -438,9 +510,9 @@ if __name__ == "__main__":
 
     print("🚀 启动多模态皮肤图像分析系统...")
     print("📊 将结合临床数据和图像进行综合分析...")
-    print("🎯 大模型将只输出病变类型，汇总文件将包含所有诊断结果")
+    print("🎯 大模型将只输出病变类型，系统将自动评估诊断准确率")
 
-    results, patient_df = analyze_skin_images_multimodal("config.json")
+    results, patient_df = analyze_skin_images_multimodal("config2.json")
 
     if results:
         create_multimodal_summary(results, patient_df)
