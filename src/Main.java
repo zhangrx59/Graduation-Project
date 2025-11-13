@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.sql.*;
 
 // 程序入口
@@ -9,6 +10,43 @@ public class Main {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(LoginFrame::new);
+    }
+}
+
+/**
+ * 简单 UI 工具：把图片淡化（叠加一层半透明白色）
+ */
+class UIUtils {
+    /**
+     * 从 classpath 加载图片，并进行淡化处理
+     * @param resourcePath 资源路径，例如 "/background.jpg"
+     * @param whiteAlpha   白色叠加透明度（0~1，0.4~0.7 比较合适）
+     */
+    public static ImageIcon createDimmedIcon(String resourcePath, float whiteAlpha) {
+        java.net.URL url = UIUtils.class.getResource(resourcePath);
+        if (url == null) {
+            // 找不到资源时，返回一个空的图标避免 NPE
+            return new ImageIcon();
+        }
+        ImageIcon icon = new ImageIcon(url);
+        Image src = icon.getImage();
+        int w = src.getWidth(null);
+        int h = src.getHeight(null);
+        if (w <= 0 || h <= 0) {
+            return icon;
+        }
+
+        BufferedImage buf = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = buf.createGraphics();
+        // 先绘制原始图片
+        g2.drawImage(src, 0, 0, null);
+        // 再叠加一层半透明白色，达到“淡化”的效果
+        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, whiteAlpha));
+        g2.setColor(Color.WHITE);
+        g2.fillRect(0, 0, w, h);
+        g2.dispose();
+
+        return new ImageIcon(buf);
     }
 }
 
@@ -20,6 +58,7 @@ class LoginFrame extends JFrame implements ActionListener {
     private JLabel statusLabel;
     private JButton loginButton;
     private JButton registerButton;
+    private JButton exitButton;   // 登录界面的退出程序按钮
 
     public LoginFrame() {
         setTitle("登录窗口");
@@ -28,33 +67,40 @@ class LoginFrame extends JFrame implements ActionListener {
         setLocationRelativeTo(null); // 窗口居中
         setResizable(false);
 
-        // === 1. 设置背景图片 ===
-        // 注意：background.jpg 放在「工程根目录」，和 src 同级
-        ImageIcon bgIcon = new ImageIcon(
-                LoginFrame.class.getResource("/background.jpg")
-        );
+        // === 1. 设置背景图片（淡化版） ===
+        ImageIcon bgIcon = UIUtils.createDimmedIcon("/background.jpg", 0.45f);
         JLabel bgLabel = new JLabel(bgIcon);
         setContentPane(bgLabel);
-
-        // 使用绝对布局，手动摆放控件
         bgLabel.setLayout(null);
 
-        // === 2. 定义字体（加粗 + 变大） ===
-        Font labelFont = new Font("微软雅黑", Font.BOLD, 28);   // 标签：加粗
-        Font fieldFont = new Font("微软雅黑", Font.PLAIN, 24);   // 输入框
-        Font buttonFont = new Font("微软雅黑", Font.BOLD, 24);  // 按钮
-        Font statusFont = new Font("微软雅黑", Font.BOLD, 20);  // 状态提示
+        // 统一文字颜色：黑色
+        Color textColor = Color.BLACK;
 
-        // === 3. 计算大致中间位置（手动调好的坐标）===
+        // === 2. 定义字体（加粗 + 变大） ===
+        Font titleFont = new Font("微软雅黑", Font.BOLD, 48);  // 欢迎语更大
+        Font labelFont = new Font("微软雅黑", Font.BOLD, 30);   // 标签：稍微加大
+        Font fieldFont = new Font("微软雅黑", Font.PLAIN, 24);   // 输入框
+        Font buttonFont = new Font("微软雅黑", Font.BOLD, 26);  // 按钮
+        Font statusFont = new Font("微软雅黑", Font.BOLD, 22);  // 状态提示
+
+        // === 2.1 欢迎语（登录界面顶部，居中） ===
+        JLabel welcomeLabel = new JLabel("欢迎使用医疗大模型诊断系统");
+        welcomeLabel.setFont(titleFont);
+        welcomeLabel.setForeground(textColor);
+        welcomeLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        welcomeLabel.setBounds(0, 120, 1920, 80);
+        bgLabel.add(welcomeLabel);
+
+        // === 3. 表单区域 ===
         int formLeftX = 760;   // 整个表单左边起点 X
-        int labelWidth = 120;
+        int labelWidth = 140;
         int labelHeight = 40;
         int fieldWidth = 320;
         int fieldHeight = 40;
 
         // 用户名标签
         JLabel userLabel = new JLabel("用户名：");
-        userLabel.setForeground(Color.BLACK);
+        userLabel.setForeground(textColor);
         userLabel.setFont(labelFont);
         userLabel.setBounds(formLeftX, 500, labelWidth, labelHeight);
         bgLabel.add(userLabel);
@@ -62,12 +108,14 @@ class LoginFrame extends JFrame implements ActionListener {
         // 用户名输入框
         usernameField = new JTextField();
         usernameField.setFont(fieldFont);
+        usernameField.setForeground(textColor);
+        usernameField.setOpaque(false);
         usernameField.setBounds(formLeftX + labelWidth + 20, 500, fieldWidth, fieldHeight);
         bgLabel.add(usernameField);
 
         // 密码标签
         JLabel passLabel = new JLabel("密码：");
-        passLabel.setForeground(Color.BLACK);
+        passLabel.setForeground(textColor);
         passLabel.setFont(labelFont);
         passLabel.setBounds(formLeftX, 570, labelWidth, labelHeight);
         bgLabel.add(passLabel);
@@ -75,28 +123,46 @@ class LoginFrame extends JFrame implements ActionListener {
         // 密码输入框
         passwordField = new JPasswordField();
         passwordField.setFont(fieldFont);
+        passwordField.setForeground(textColor);
+        passwordField.setOpaque(false);
         passwordField.setBounds(formLeftX + labelWidth + 20, 570, fieldWidth, fieldHeight);
         bgLabel.add(passwordField);
 
         // 登录按钮
         loginButton = new JButton("登录");
         loginButton.setFont(buttonFont);
-        loginButton.setBounds(formLeftX + labelWidth + 20, 640, 160, 45);
+        loginButton.setForeground(textColor);
+        loginButton.setBounds(formLeftX + labelWidth + 20, 640, 160, 50);
+        loginButton.setContentAreaFilled(false);
+        loginButton.setBorderPainted(true);
         loginButton.addActionListener(this);
         bgLabel.add(loginButton);
 
         // 注册按钮
         registerButton = new JButton("注册");
         registerButton.setFont(buttonFont);
-        registerButton.setBounds(formLeftX + labelWidth + 20 + 180, 640, 160, 45);
+        registerButton.setForeground(textColor);
+        registerButton.setBounds(formLeftX + labelWidth + 20 + 200, 640, 160, 50);
+        registerButton.setContentAreaFilled(false);
+        registerButton.setBorderPainted(true);
         registerButton.addActionListener(e -> openRegisterWindow());
         bgLabel.add(registerButton);
 
+        // 登录界面：退出程序按钮
+        exitButton = new JButton("退出程序");
+        exitButton.setFont(buttonFont);
+        exitButton.setForeground(textColor);
+        exitButton.setBounds(formLeftX + labelWidth + 20 + 100, 710, 200, 50);
+        exitButton.setContentAreaFilled(false);
+        exitButton.setBorderPainted(true);
+        exitButton.addActionListener(e -> System.exit(0));
+        bgLabel.add(exitButton);
+
         // 状态提示文字
         statusLabel = new JLabel("");
-        statusLabel.setForeground(Color.YELLOW);
+        statusLabel.setForeground(textColor);
         statusLabel.setFont(statusFont);
-        statusLabel.setBounds(formLeftX, 700, 460, 35);
+        statusLabel.setBounds(formLeftX, 780, 800, 35);
         bgLabel.add(statusLabel);
 
         setVisible(true);
@@ -121,9 +187,79 @@ class LoginFrame extends JFrame implements ActionListener {
         if (ok) {
             statusLabel.setText("登录成功！");
             JOptionPane.showMessageDialog(this, "登录成功！");
-            // TODO：这里可以打开主界面、关闭当前窗口
+            // 登录成功后，打开主界面（显示淡化后的 pic2.jpg），并关闭登录窗口
+            new MainAppFrame();
+            dispose();
         } else {
             statusLabel.setText("用户名或密码错误！");
+        }
+    }
+}
+
+// 主界面窗口（登录成功后显示淡化的 pic2.jpg，包含欢迎语、退出登录、退出程序）
+class MainAppFrame extends JFrame implements ActionListener {
+
+    private JButton logoutButton;
+    private JButton exitButton;
+
+    public MainAppFrame() {
+        setTitle("医疗大模型诊断系统 - 主界面");
+        setSize(1920, 1280);
+        setLocationRelativeTo(null);
+        setResizable(false);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // 设置主界面背景图：淡化版 pic2.jpg
+        ImageIcon bgIcon = UIUtils.createDimmedIcon("/background2.jpg", 0.45f);
+        JLabel bgLabel = new JLabel(bgIcon);
+        setContentPane(bgLabel);
+        bgLabel.setLayout(null);
+
+        Color textColor = Color.BLACK;
+        Font titleFont = new Font("微软雅黑", Font.BOLD, 48);
+        Font buttonFont = new Font("微软雅黑", Font.BOLD, 26);
+
+        // 顶部欢迎语（居中）
+        JLabel welcomeLabel = new JLabel("欢迎使用医疗大模型诊断系统");
+        welcomeLabel.setFont(titleFont);
+        welcomeLabel.setForeground(textColor);
+        welcomeLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        welcomeLabel.setBounds(0, 120, 1920, 80);
+        bgLabel.add(welcomeLabel);
+
+        // 退出登录按钮
+        logoutButton = new JButton("退出登录");
+        logoutButton.setFont(buttonFont);
+        logoutButton.setForeground(textColor);
+        logoutButton.setBounds(760, 700, 160, 50);
+        logoutButton.setContentAreaFilled(false);
+        logoutButton.setBorderPainted(true);
+        logoutButton.addActionListener(this);
+        bgLabel.add(logoutButton);
+
+        // 退出程序按钮
+        exitButton = new JButton("退出程序");
+        exitButton.setFont(buttonFont);
+        exitButton.setForeground(textColor);
+        exitButton.setBounds(1000, 700, 160, 50);
+        exitButton.setContentAreaFilled(false);
+        exitButton.setBorderPainted(true);
+        exitButton.addActionListener(this);
+        bgLabel.add(exitButton);
+
+        setVisible(true);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        Object src = e.getSource();
+        if (src == logoutButton) {
+            // 退出登录：关闭当前主界面，回到登录窗口
+            dispose();
+            new LoginFrame();
+        } else if (src == exitButton) {
+            // 退出程序：直接结束 JVM
+            System.exit(0);
         }
     }
 }
@@ -143,7 +279,8 @@ class RegisterFrame extends JDialog implements ActionListener {
         setLocationRelativeTo(parent);
         setLayout(null);
 
-        Font labelFont = new Font("微软雅黑", Font.BOLD, 20);
+        Color textColor = Color.BLACK;
+        Font labelFont = new Font("微软雅黑", Font.BOLD, 22);
         Font fieldFont = new Font("微软雅黑", Font.PLAIN, 18);
         Font buttonFont = new Font("微软雅黑", Font.BOLD, 20);
         Font statusFont = new Font("微软雅黑", Font.BOLD, 16);
@@ -156,47 +293,59 @@ class RegisterFrame extends JDialog implements ActionListener {
         // 用户名
         JLabel userLabel = new JLabel("用户名：");
         userLabel.setFont(labelFont);
+        userLabel.setForeground(textColor);
         userLabel.setBounds(leftX, 60, labelWidth, height);
         add(userLabel);
 
         usernameField = new JTextField();
         usernameField.setFont(fieldFont);
+        usernameField.setForeground(textColor);
+        usernameField.setOpaque(false);
         usernameField.setBounds(leftX + labelWidth + 10, 60, fieldWidth, height);
         add(usernameField);
 
         // 密码
         JLabel passLabel = new JLabel("密码：");
         passLabel.setFont(labelFont);
+        passLabel.setForeground(textColor);
         passLabel.setBounds(leftX, 110, labelWidth, height);
         add(passLabel);
 
         passwordField = new JPasswordField();
         passwordField.setFont(fieldFont);
+        passwordField.setForeground(textColor);
+        passwordField.setOpaque(false);
         passwordField.setBounds(leftX + labelWidth + 10, 110, fieldWidth, height);
         add(passwordField);
 
         // 确认密码
         JLabel confirmLabel = new JLabel("确认密码：");
         confirmLabel.setFont(labelFont);
+        confirmLabel.setForeground(textColor);
         confirmLabel.setBounds(leftX, 160, labelWidth + 40, height);
         add(confirmLabel);
 
         confirmField = new JPasswordField();
         confirmField.setFont(fieldFont);
+        confirmField.setForeground(textColor);
+        confirmField.setOpaque(false);
         confirmField.setBounds(leftX + labelWidth + 50, 160, fieldWidth, height);
         add(confirmField);
 
         // 提交按钮
         submitButton = new JButton("提交注册");
         submitButton.setFont(buttonFont);
+        submitButton.setForeground(textColor);
         submitButton.setBounds(leftX + 80, 220, 200, 40);
+        submitButton.setContentAreaFilled(false);
+        submitButton.setBorderPainted(true);
         submitButton.addActionListener(this);
         add(submitButton);
 
         // 状态提示
         statusLabel = new JLabel("");
         statusLabel.setFont(statusFont);
-        statusLabel.setForeground(Color.RED);
+        statusLabel.setForeground(textColor);
         statusLabel.setBounds(leftX, 280, 450, 30);
         add(statusLabel);
 
@@ -284,7 +433,6 @@ class DBHelper {
             ps.executeUpdate();
             return true;
         } catch (SQLException e) {
-            // 常见：UNIQUE 约束冲突（用户名重复）
             System.err.println("注册失败：" + e.getMessage());
             return false;
         }
@@ -310,7 +458,4 @@ class DBHelper {
         }
         return false;
     }
-
-    // 示例：你以后想直接写 SQL 也可以扩展，例如：
-    // public static void runCustomQuery(String sql) { ... }
 }
