@@ -395,7 +395,7 @@ def main():
     total_loss_train, total_acc_train = [], []
     total_loss_val, total_acc_val = [], []
 
-    best_model_path = "best_resnet50_ham10000.pth"
+    best_model_path = "../best_resnet50_ham10000.pth"
 
     for epoch in tqdm(range(1, epoch_num + 1)):
         loss_train, acc_train = train_one_epoch(
