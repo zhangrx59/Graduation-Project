@@ -119,7 +119,6 @@ def initialize_model(model_name: str, num_classes: int,
     input_size = 0
 
     if model_name == "resnet":
-        # 使用新写法，避免 pretrained 警告
         if use_pretrained:
             weights = ResNet50_Weights.DEFAULT
         else:
@@ -144,7 +143,6 @@ def train_one_epoch(train_loader, model, criterion, optimizer, epoch, device,
     for i, data in enumerate(train_loader):
         images, labels = data
         N = images.size(0)
-        # 关键：把数据搬到 GPU
         images = images.to(device, non_blocking=True)
         labels = labels.to(device, non_blocking=True)
 
@@ -243,15 +241,20 @@ def main():
     all_image_path = glob(os.path.join(data_dir, '*', '*.jpg'))
     imageid_path_dict = {os.path.splitext(os.path.basename(x))[0]: x for x in all_image_path}
 
+    # 短标签到长名称（可选，仅用于可读性，不参与编码）
     lesion_type_dict = {
         'nv': 'Melanocytic nevi',
-        'mel': 'dermatofibroma',
-        'bkl': 'Benign keratosis-like lesions ',
+        'mel': 'Melanoma',
+        'bkl': 'Benign keratosis-like lesions',
         'bcc': 'Basal cell carcinoma',
         'akiec': 'Actinic keratoses',
         'vasc': 'Vascular lesions',
         'df': 'Dermatofibroma'
     }
+
+    # 统一的 dx 顺序（训练和测试都会用这一套）
+    dx_categories = ['akiec', 'bcc', 'bkl', 'df', 'nv', 'vasc', 'mel']
+    dx_to_idx = {dx: i for i, dx in enumerate(dx_categories)}
 
     # ========== 3. 使用预先算好的 mean/std ==========
     norm_mean = [0.7630392, 0.5456477, 0.57004845]
@@ -261,8 +264,9 @@ def main():
     df_original = pd.read_csv(os.path.join(data_dir, 'HAM10000_metadata.csv'))
     df_original['path'] = df_original['image_id'].map(imageid_path_dict.get)
     df_original['cell_type'] = df_original['dx'].map(lesion_type_dict.get)
-    df_original['cell_type_idx'] = pd.Categorical(df_original['cell_type']).codes
+    df_original['cell_type_idx'] = df_original['dx'].map(dx_to_idx)
     print("df_original head:\n", df_original.head())
+    print("dx value_counts:\n", df_original['dx'].value_counts())
 
     # ========== 5. 统计每个 lesion_id 的图像数量 ==========
     df_undup = df_original.groupby('lesion_id').count()
@@ -308,6 +312,7 @@ def main():
     print("df_val cell_type counts:\n", df_val['cell_type'].value_counts())
 
     # ========== 8. 过采样平衡各类别 ==========
+    # 顺序与 dx_categories 对应：['akiec','bcc','bkl','df','nv','vasc','mel']
     data_aug_rate = [15, 10, 5, 50, 0, 40, 5]
     augmented_frames = [df_train]
     for i, rate in enumerate(data_aug_rate):
@@ -316,7 +321,7 @@ def main():
             augmented_frames.append(pd.concat([df_i] * (rate - 1), ignore_index=True))
 
     df_train = pd.concat(augmented_frames, ignore_index=True)
-    print("After oversampling, df_train cell_type counts:\n", df_train['cell_type'].value_counts())
+    print("After oversampling, df_train dx counts:\n", df_train['dx'].value_counts())
 
     # ========== 9. 再把 df_val 一分为二 → val + test ==========
     df_val, df_test = train_test_split(df_val, test_size=0.5, random_state=101)
@@ -329,18 +334,17 @@ def main():
 
     # ========== 10. 初始化模型 ==========
     model_name = "resnet"
-    num_classes = 7
+    num_classes = len(dx_categories)
     feature_extract = False
 
     model_ft, input_size = initialize_model(model_name, num_classes, feature_extract, use_pretrained=True)
 
-    # 设备（这里确定用 GPU）
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Using device:", device)
     if device.type == "cuda":
         print("GPU name:", torch.cuda.get_device_name(0))
         print("GPU count:", torch.cuda.device_count())
-        torch.backends.cudnn.benchmark = True  # 提升卷积性能
+        torch.backends.cudnn.benchmark = True
 
     model = model_ft.to(device)
 
@@ -372,7 +376,6 @@ def main():
     validation_set = HAM10000Dataset(df_val, transform=val_transform)
     test_set = HAM10000Dataset(df_test, transform=test_transform)
 
-    # CUDA 下推荐 pin_memory=True
     pin_memory = (device.type == "cuda")
 
     train_loader = DataLoader(training_set, batch_size=64, shuffle=True,
@@ -392,6 +395,8 @@ def main():
     total_loss_train, total_acc_train = [], []
     total_loss_val, total_acc_val = [], []
 
+    best_model_path = "best_resnet50_ham10000.pth"
+
     for epoch in tqdm(range(1, epoch_num + 1)):
         loss_train, acc_train = train_one_epoch(
             train_loader, model, criterion, optimizer, epoch, device,
@@ -403,14 +408,14 @@ def main():
 
         if acc_val > best_val_acc:
             best_val_acc = acc_val
-            torch.save(model.state_dict(), "best_resnet50_ham10000.pth")
+            torch.save(model.state_dict(), best_model_path)
             print('*****************************************************')
             print('best record: [epoch %d], [val loss %.5f], [val acc %.5f]' %
                   (epoch, loss_val, acc_val))
+            print(f'Model saved at {best_model_path}')
             print('*****************************************************')
 
     # ========== 15. 训练 & 验证曲线绘图 ==========
-    # 验证集：accuracy & loss
     plt.figure(figsize=(8, 6))
     plt.plot(total_acc_val, label='Validation accuracy')
     plt.plot(total_loss_val, label='Validation loss')
@@ -421,7 +426,6 @@ def main():
     plt.tight_layout()
     plt.show()
 
-    # 训练集：accuracy & loss
     plt.figure(figsize=(8, 6))
     plt.plot(total_acc_train, label='Training accuracy')
     plt.plot(total_loss_train, label='Training loss')
@@ -446,19 +450,15 @@ def main():
             y_label.extend(labels.cpu().numpy())
             y_predict.extend(prediction.cpu().numpy().ravel())
 
-    # compute the confusion matrix (Validation)
     confusion_mtx = confusion_matrix(y_label, y_predict)
+    plot_labels = dx_categories
 
-    plot_labels = ['akiec', 'bcc', 'bkl', 'df', 'nv', 'vasc', 'mel']
-
-    # plot the confusion matrix (Validation)
     plt.figure(figsize=(8, 6))
     plot_confusion_matrix(confusion_mtx, plot_labels,
                           normalize=False,
                           title='Validation Confusion Matrix')
     plt.show()
 
-    # Validation classification report
     print("Validation classification report:")
     report_val = classification_report(y_label, y_predict, target_names=plot_labels)
     print(report_val)
@@ -477,23 +477,19 @@ def main():
             test_y_label.extend(labels.cpu().numpy())
             test_y_predict.extend(prediction.cpu().numpy().ravel())
 
-    # compute the confusion matrix (Test)
     confusion_mtx_test = confusion_matrix(test_y_label, test_y_predict)
 
-    # plot the confusion matrix (Test)
     plt.figure(figsize=(8, 6))
     plot_confusion_matrix(confusion_mtx_test, plot_labels,
                           normalize=False,
                           title='Test Confusion Matrix')
     plt.show()
 
-    # Test classification report
     print("Test classification report:")
     report_test = classification_report(test_y_label, test_y_predict, target_names=plot_labels)
     print(report_test)
 
     # ========== 18. 每个类别的错误率条形图 ==========
-    # Validation 错误率
     label_frac_error_val = 1 - np.diag(confusion_mtx) / np.sum(confusion_mtx, axis=1)
     plt.figure(figsize=(8, 6))
     plt.bar(np.arange(len(plot_labels)), label_frac_error_val)
@@ -504,7 +500,6 @@ def main():
     plt.tight_layout()
     plt.show()
 
-    # Test 错误率
     label_frac_error_test = 1 - np.diag(confusion_mtx_test) / np.sum(confusion_mtx_test, axis=1)
     plt.figure(figsize=(8, 6))
     plt.bar(np.arange(len(plot_labels)), label_frac_error_test)
