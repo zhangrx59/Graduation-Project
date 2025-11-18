@@ -201,6 +201,10 @@ def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
+    """
+    打印并绘制混淆矩阵。
+    Normalization 可以通过 normalize=True 开启。
+    """
     if normalize:
         cm = cm.astype('float') / (cm.sum(axis=1)[:, np.newaxis] + 1e-12)
 
@@ -211,9 +215,9 @@ def plot_confusion_matrix(cm, classes,
     plt.xticks(tick_marks, classes, rotation=45)
     plt.yticks(tick_marks, classes)
 
-    thresh = cm.max() / 2.0
+    thresh = cm.max() / 2.
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        plt.text(j, i, int(cm[i, j]),
+        plt.text(j, i, cm[i, j],
                  horizontalalignment="center",
                  color="white" if cm[i, j] > thresh else "black")
 
@@ -371,11 +375,11 @@ def main():
     # CUDA 下推荐 pin_memory=True
     pin_memory = (device.type == "cuda")
 
-    train_loader = DataLoader(training_set, batch_size=32, shuffle=True,
+    train_loader = DataLoader(training_set, batch_size=64, shuffle=True,
                               num_workers=4, pin_memory=pin_memory)
-    val_loader = DataLoader(validation_set, batch_size=32, shuffle=False,
+    val_loader = DataLoader(validation_set, batch_size=64, shuffle=False,
                             num_workers=4, pin_memory=pin_memory)
-    test_loader = DataLoader(test_set, batch_size=32, shuffle=False,
+    test_loader = DataLoader(test_set, batch_size=64, shuffle=False,
                              num_workers=4, pin_memory=pin_memory)
 
     # ========== 13. 优化器 & 损失函数 ==========
@@ -399,24 +403,116 @@ def main():
 
         if acc_val > best_val_acc:
             best_val_acc = acc_val
+            torch.save(model.state_dict(), "best_resnet50_ham10000.pth")
             print('*****************************************************')
             print('best record: [epoch %d], [val loss %.5f], [val acc %.5f]' %
                   (epoch, loss_val, acc_val))
             print('*****************************************************')
 
-    # ========== 15. 简单画训练/验证曲线 ==========
-    plt.figure()
-    plt.plot(total_acc_val, label='validation accuracy')
-    plt.plot(total_loss_val, label='validation loss')
-    plt.legend()
+    # ========== 15. 训练 & 验证曲线绘图 ==========
+    # 验证集：accuracy & loss
+    plt.figure(figsize=(8, 6))
+    plt.plot(total_acc_val, label='Validation accuracy')
+    plt.plot(total_loss_val, label='Validation loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Value')
     plt.title('Validation curves')
+    plt.legend()
+    plt.tight_layout()
     plt.show()
 
-    plt.figure()
-    plt.plot(total_acc_train, label='training accuracy')
-    plt.plot(total_loss_train, label='training loss')
-    plt.legend()
+    # 训练集：accuracy & loss
+    plt.figure(figsize=(8, 6))
+    plt.plot(total_acc_train, label='Training accuracy')
+    plt.plot(total_loss_train, label='Training loss')
+    plt.xlabel('Iteration (logged points)')
+    plt.ylabel('Value')
     plt.title('Training curves')
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+    # ========== 16. Validation data evaluation ==========
+    model.eval()
+    y_label = []
+    y_predict = []
+
+    with torch.no_grad():
+        for images, labels in val_loader:
+            images = images.to(device, non_blocking=True)
+            outputs = model(images)
+            prediction = outputs.max(1, keepdim=True)[1]
+
+            y_label.extend(labels.cpu().numpy())
+            y_predict.extend(prediction.cpu().numpy().ravel())
+
+    # compute the confusion matrix (Validation)
+    confusion_mtx = confusion_matrix(y_label, y_predict)
+
+    plot_labels = ['akiec', 'bcc', 'bkl', 'df', 'nv', 'vasc', 'mel']
+
+    # plot the confusion matrix (Validation)
+    plt.figure(figsize=(8, 6))
+    plot_confusion_matrix(confusion_mtx, plot_labels,
+                          normalize=False,
+                          title='Validation Confusion Matrix')
+    plt.show()
+
+    # Validation classification report
+    print("Validation classification report:")
+    report_val = classification_report(y_label, y_predict, target_names=plot_labels)
+    print(report_val)
+
+    # ========== 17. Test data evaluation ==========
+    model.eval()
+    test_y_label = []
+    test_y_predict = []
+
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images = images.to(device, non_blocking=True)
+            outputs = model(images)
+            prediction = outputs.max(1, keepdim=True)[1]
+
+            test_y_label.extend(labels.cpu().numpy())
+            test_y_predict.extend(prediction.cpu().numpy().ravel())
+
+    # compute the confusion matrix (Test)
+    confusion_mtx_test = confusion_matrix(test_y_label, test_y_predict)
+
+    # plot the confusion matrix (Test)
+    plt.figure(figsize=(8, 6))
+    plot_confusion_matrix(confusion_mtx_test, plot_labels,
+                          normalize=False,
+                          title='Test Confusion Matrix')
+    plt.show()
+
+    # Test classification report
+    print("Test classification report:")
+    report_test = classification_report(test_y_label, test_y_predict, target_names=plot_labels)
+    print(report_test)
+
+    # ========== 18. 每个类别的错误率条形图 ==========
+    # Validation 错误率
+    label_frac_error_val = 1 - np.diag(confusion_mtx) / np.sum(confusion_mtx, axis=1)
+    plt.figure(figsize=(8, 6))
+    plt.bar(np.arange(len(plot_labels)), label_frac_error_val)
+    plt.xticks(np.arange(len(plot_labels)), plot_labels, rotation=45)
+    plt.xlabel('True Label')
+    plt.ylabel('Fraction classified incorrectly')
+    plt.title('Validation per-class error rate')
+    plt.tight_layout()
+    plt.show()
+
+    # Test 错误率
+    label_frac_error_test = 1 - np.diag(confusion_mtx_test) / np.sum(confusion_mtx_test, axis=1)
+    plt.figure(figsize=(8, 6))
+    plt.bar(np.arange(len(plot_labels)), label_frac_error_test)
+    plt.xticks(np.arange(len(plot_labels)), plot_labels, rotation=45)
+    plt.xlabel('True Label')
+    plt.ylabel('Fraction classified incorrectly')
+    plt.title('Test per-class error rate')
+    plt.tight_layout()
     plt.show()
 
 
