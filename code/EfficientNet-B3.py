@@ -388,11 +388,11 @@ def main():
 
     pin_memory = (device.type == "cuda")
 
-    train_loader = DataLoader(training_set, batch_size=64, shuffle=True,
+    train_loader = DataLoader(training_set, batch_size=32, shuffle=True,
                               num_workers=4, pin_memory=pin_memory)
-    val_loader = DataLoader(validation_set, batch_size=64, shuffle=False,
+    val_loader = DataLoader(validation_set, batch_size=32, shuffle=False,
                             num_workers=4, pin_memory=pin_memory)
-    test_loader = DataLoader(test_set, batch_size=64, shuffle=False,
+    test_loader = DataLoader(test_set, batch_size=32, shuffle=False,
                              num_workers=4, pin_memory=pin_memory)
 
     # ========== 13. 优化器 & 损失函数 ==========
