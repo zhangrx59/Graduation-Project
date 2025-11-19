@@ -1,0 +1,16 @@
+Test set classification report (EfficientNet-B3, imbalanced test set)
+Overall accuracy: 0.9211
+
+              precision    recall  f1-score   support
+
+       akiec     0.6667    0.6667    0.6667        30
+         bcc     0.8684    0.9429    0.9041        35
+         bkl     0.6983    0.9205    0.7941        88
+          df     0.6667    0.7500    0.7059         8
+          nv     0.9804    0.9615    0.9708       883
+        vasc     1.0000    0.6923    0.8182        13
+         mel     0.5143    0.3913    0.4444        46
+
+    accuracy                         0.9211      1103
+   macro avg     0.7707    0.7607    0.7577      1103
+weighted avg     0.9243    0.9211    0.9207      1103

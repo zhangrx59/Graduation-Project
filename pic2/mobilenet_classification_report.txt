@@ -1,0 +1,16 @@
+Test set classification report (MobileNet v2, imbalanced test set)
+Overall accuracy: 0.9157
+
+              precision    recall  f1-score   support
+
+       akiec     0.5897    0.7667    0.6667        30
+         bcc     0.7674    0.9429    0.8462        35
+         bkl     0.8615    0.6364    0.7320        88
+          df     0.6000    0.7500    0.6667         8
+          nv     0.9558    0.9796    0.9676       883
+        vasc     1.0000    0.7692    0.8696        13
+         mel     0.5484    0.3696    0.4416        46
+
+    accuracy                         0.9157      1103
+   macro avg     0.7604    0.7449    0.7415      1103
+weighted avg     0.9133    0.9157    0.9115      1103
