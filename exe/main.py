@@ -558,10 +558,10 @@ class LoginFrame(tk.Frame):
                 pass
 
         tk.Label(self, text="用户名").grid(row=1, column=0, sticky="e", pady=4, padx=(0, 6))
-        self.ent_user = tk.Entry(self, width=24); self.ent_user.grid(row=1, column=1, pady=4); self.ent_user.insert(0, "admin")
+        self.ent_user = tk.Entry(self, width=24); self.ent_user.grid(row=1, column=1, pady=4); self.ent_user.insert(0, "")
         tk.Label(self, text="密码").grid(row=2, column=0, sticky="e", pady=4, padx=(0, 6))
         self.var_pwd = tk.StringVar()
-        self.ent_pwd = tk.Entry(self, textvariable=self.var_pwd, width=24, show="•"); self.ent_pwd.grid(row=2, column=1, pady=4); self.ent_pwd.insert(0, "123456")
+        self.ent_pwd = tk.Entry(self, textvariable=self.var_pwd, width=24, show="•"); self.ent_pwd.grid(row=2, column=1, pady=4); self.ent_pwd.insert(0, "")
 
         self.var_show = tk.BooleanVar(value=False)
         tk.Checkbutton(self, text="显示密码", variable=self.var_show,
