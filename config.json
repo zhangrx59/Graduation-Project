@@ -1,7 +1,7 @@
 {
   "api_config": {
     "base_url": "https://api.siliconflow.cn/v1",
-    "model_type": "Qwen/Qwen3-VL-235B-A22B-Thinking",
+    "model_type": "Qwen/Qwen3-VL-235B-A22B-Instruct",
     "api_keys": [
       "sk-uhobwdodfqwkayapmgposlzsykswpuzaunzebblhcmgyrage",
       "sk-oygtgdajeomhixrhxmdykexazqksceutjwybeasvpgjrjhij",
@@ -27,7 +27,7 @@
     "folder_path": "C:/Users/zhangrx59/Desktop/photos",
     "csv_file_path": "C:/Users/zhangrx59/Desktop/photos.csv",
     "supported_formats": [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".gif"],
-    "max_workers": 16,
+    "max_workers": 8,
     "image_id_column": "image_id",
     "clinical_columns": ["age", "sex", "localization"]
   },
@@ -47,6 +47,6 @@
       "mel": "黑色素瘤",
       "vasc": "血管病变"
     },
-    "output_requirement": "请给出最终诊断结论，不需要输出推理过程，，不要输出模棱两可的答案，必须给出唯一的结果。务必务必务必(非常重要）单列一行以这种格式输出：dx:疾病代码（以英文缩写表示）。"
+    "output_requirement": "请给出最终诊断结论，输出推理过程，不要输出模棱两可的答案，必须给出唯一的结果。务必务必务必(非常重要）单列一行以这种格式输出：dx:疾病代码（以英文缩写表示）。"
   }
 }

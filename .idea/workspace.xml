@@ -5,30 +5,30 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="23abdddc-0751-472a-a191-f849a22ca8c1" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/pipei2.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/download.py" beforeDir="false" afterPath="$PROJECT_DIR$/download.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/exe/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/multimodal_analysis_summary.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_10_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_11_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_12_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_13_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_14_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_15_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_16_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_1_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_2_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_3_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_4_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_5_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_6_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_7_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_8_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exe/multimodel_outputs_qwen/process_9_output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/plot.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/skin_lesion_simple.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_gpt5/multimodal_analysis_summary.txt" beforeDir="false" afterPath="$PROJECT_DIR$/multimodel_outputs_gpt5/multimodal_analysis_summary.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_gpt5/process_1_output.txt" beforeDir="false" afterPath="$PROJECT_DIR$/multimodel_outputs_gpt5/process_1_output.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_gpt5/process_2_output.txt" beforeDir="false" afterPath="$PROJECT_DIR$/multimodel_outputs_gpt5/process_2_output.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_gpt5/process_3_output.txt" beforeDir="false" afterPath="$PROJECT_DIR$/multimodel_outputs_gpt5/process_3_output.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_gpt5/process_4_output.txt" beforeDir="false" afterPath="$PROJECT_DIR$/multimodel_outputs_gpt5/process_4_output.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/multimodal_analysis_summary.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_10_output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_11_output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_12_output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_13_output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_14_output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_15_output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_16_output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_1_output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_2_output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_3_output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_4_output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_5_output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_6_output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_7_output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_8_output.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/multimodel_outputs_qwen/process_9_output.txt" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -126,7 +126,7 @@
       <workItem from="1763389578932" duration="4849000" />
       <workItem from="1763435767216" duration="32000" />
       <workItem from="1763469971567" duration="1753000" />
-      <workItem from="1763515204402" duration="327000" />
+      <workItem from="1763515204402" duration="7165000" />
     </task>
     <servers />
   </component>
@@ -134,7 +134,7 @@
     <option name="version" value="3" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/PythonProject2$call_api_qwen.coverage" NAME="call_api_qwen 覆盖结果" MODIFIED="1763515527250" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/PythonProject2$call_api_qwen.coverage" NAME="call_api_qwen 覆盖结果" MODIFIED="1763519665153" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PythonProject2$api.coverage" NAME="api 覆盖结果" MODIFIED="1762337084234" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PythonProject2$call_api.coverage" NAME="call_api 覆盖结果" MODIFIED="1762400202515" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PythonProject2$pipei2.coverage" NAME="pipei2 覆盖结果" MODIFIED="1763515450984" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -144,7 +144,7 @@
     <SUITE FILE_PATH="coverage/PythonProject2$main.coverage" NAME="main 覆盖结果" MODIFIED="1763429228039" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exe" />
     <SUITE FILE_PATH="coverage/PythonProject2$pipei.coverage" NAME="pipei 覆盖结果" MODIFIED="1763390540918" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PythonProject2$plot.coverage" NAME="plot 覆盖结果" MODIFIED="1762413494813" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/PythonProject2$call_api_gpt.coverage" NAME="call_api_gpt 覆盖结果" MODIFIED="1762923596136" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/PythonProject2$call_api_gpt.coverage" NAME="call_api_gpt 覆盖结果" MODIFIED="1763522007651" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PythonProject2$test.coverage" NAME="test 覆盖结果" MODIFIED="1762950094490" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exe" />
     <SUITE FILE_PATH="coverage/PythonProject2$a.coverage" NAME="a 覆盖结果" MODIFIED="1762913902888" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/exe" />
   </component>
