@@ -5,6 +5,7 @@ Test ResNet50 on HAM10000 with saved weights
 1. Confusion Matrix 热力图
 2. 每类疾病的 ROC 曲线（七条曲线一张图）
 3. 每类疾病的 Precision-Recall 曲线（七条曲线一张图）
+4. 文本版分类报告（打印 + 保存为 txt）
 """
 
 import os
@@ -75,8 +76,8 @@ def main():
     df_original['cell_type_idx'] = df_original['dx'].map(dx_to_idx)
 
     # 按训练逻辑复现 df_test
-    df_undup = df_original.groupby('lesion_id').count()
-    df_undup = df_undup[df_undup['image_id'] == 1]
+    df_undup = df_original.groupby('lesion_id').apply(lambda x: x.sample(1, random_state=101))
+    df_undup = df_undup.reset_index(drop=True)
     df_undup.reset_index(inplace=True)
 
     def get_duplicates(x):
@@ -130,12 +131,37 @@ def main():
     y_pred = np.array(y_pred)
     y_scores = np.concatenate(y_scores, axis=0)
 
+    # ====== 文本版报告（整体准确率 + classification_report） ======
+    test_acc = (y_true == y_pred).mean()
+    print("\n=================== Text Report (Test Set) ===================")
+    print(f"Overall test accuracy: {test_acc:.4f}\n")
+
+    cls_report = classification_report(
+        y_true,
+        y_pred,
+        target_names=dx_categories,
+        digits=4
+    )
+    print("Classification report on test set:\n")
+    print(cls_report)
+
+    # 同时把报告保存成 txt 文件，方便论文/报告使用
+    report_path = os.path.join(PICS_DIR, "classification_report.txt")
+    with open(report_path, "w", encoding="utf-8") as f:
+        f.write("Test set classification report\n")
+        f.write(f"Overall accuracy: {test_acc:.4f}\n\n")
+        f.write(cls_report)
+    print(f"[SAVED] Text classification report -> {report_path}")
+    print("==============================================================\n")
+
     # ====== Confusion Matrix 可视化并保存 ======
     cm = confusion_matrix(y_true, y_pred)
     plt.figure(figsize=(8, 6))
     plot_confusion_matrix(cm, dx_categories, title='Test Confusion Matrix')
-    plt.savefig(os.path.join(PICS_DIR, "confusion_matrix.png"), dpi=300)
+    cm_path = os.path.join(PICS_DIR, "confusion_matrix.png")
+    plt.savefig(cm_path, dpi=300)
     plt.show()
+    print(f"[SAVED] Confusion Matrix -> {cm_path}")
 
     # ====== ROC 曲线 ======
     y_true_bin = label_binarize(y_true, classes=list(range(n_classes)))
@@ -152,10 +178,11 @@ def main():
     plt.title('Multi-class ROC Curves')
     plt.legend(loc='lower right')
     plt.tight_layout()
-    plt.savefig(os.path.join(PICS_DIR, "roc_curves.png"), dpi=300)
+    roc_path = os.path.join(PICS_DIR, "roc_curves.png")
+    plt.savefig(roc_path, dpi=300)
     plt.show()
+    print(f"[SAVED] ROC curves -> {roc_path}")
 
-    # ====== Precision-Recall 曲线 ======
     # ====== Precision-Recall 曲线 ======
     plt.figure(figsize=(8, 6))
     for i in range(n_classes):
@@ -175,12 +202,12 @@ def main():
 
     # ====== 最后的文字汇总输出 ======
     print("\n=================== Finished ===================")
-    print("All classification text outputs have been printed above.")
-    print("All images (Confusion Matrix, ROC Curves, PR Curves) have been saved to:")
-    print(f"📁 {PICS_DIR}")
+    print("✅ Text classification report has been printed above.")
+    print(f"   And saved to: {report_path}")
+    print("✅ All images (Confusion Matrix, ROC Curves, PR Curves) have been saved to:")
+    print(f"   📁 {PICS_DIR}")
     print("You can open them for visualization or include them in reports/papers.")
     print("=================================================\n")
-
 
 
 if __name__ == "__main__":

@@ -323,11 +323,11 @@ def main():
 
     pin_memory = (device.type == "cuda")
 
-    train_loader = DataLoader(training_set, batch_size=32, shuffle=True,
+    train_loader = DataLoader(training_set, batch_size=64, shuffle=True,
                               num_workers=4, pin_memory=pin_memory)
-    val_loader = DataLoader(validation_set, batch_size=32, shuffle=False,
+    val_loader = DataLoader(validation_set, batch_size=64, shuffle=False,
                             num_workers=4, pin_memory=pin_memory)
-    test_loader = DataLoader(test_set, batch_size=32, shuffle=False,
+    test_loader = DataLoader(test_set, batch_size=64, shuffle=False,
                              num_workers=4, pin_memory=pin_memory)
 
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
@@ -337,6 +337,7 @@ def main():
     best_val_acc = 0
     total_loss_train, total_acc_train = [], []
     total_loss_val, total_acc_val = [], []
+    best_model_path = "../best_mobilenet_ham10000.pth"
 
     for epoch in tqdm(range(1, epoch_num + 1)):
         loss_train, acc_train = train_one_epoch(
@@ -348,6 +349,7 @@ def main():
         total_acc_val.append(acc_val)
         if acc_val > best_val_acc:
             best_val_acc = acc_val
+            torch.save(model.state_dict(), best_model_path)
             print('*****************************************************')
             print('best record: [epoch %d], [val loss %.5f], [val acc %.5f]' %
                   (epoch, loss_val, acc_val))
