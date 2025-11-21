@@ -5,9 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a132803e-e457-49cc-b345-f8798986e4ad" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/liandan.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/liandan.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cleandata.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pipei.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/best_efficientnet_b3_ham10000.pth" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/best_mobilenet_ham10000.pth" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/best_resnet50_ham10000.pth" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/code/ResNet50.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/ResNet50.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/code/test_resnet50.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/test_resnet50.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pics/classification_report.txt" beforeDir="false" afterPath="$PROJECT_DIR$/pics/classification_report.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pics/confusion_matrix.png" beforeDir="false" afterPath="$PROJECT_DIR$/pics/confusion_matrix.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pics/pr_curves.png" beforeDir="false" afterPath="$PROJECT_DIR$/pics/pr_curves.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pics/roc_curves.png" beforeDir="false" afterPath="$PROJECT_DIR$/pics/roc_curves.png" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,7 +63,9 @@
     "Python.MobileNet.executor": "Run",
     "Python.ResNet.executor": "Run",
     "Python.ResNet50.executor": "Run",
+    "Python.cleandata.executor": "Run",
     "Python.main.executor": "Run",
+    "Python.pipei.executor": "Run",
     "Python.test.executor": "Run",
     "Python.test_efficientnet.executor": "Run",
     "Python.test_mobilenet.executor": "Run",
@@ -92,7 +104,8 @@
       <option name="presentableId" value="Default" />
       <updated>1763435798729</updated>
       <workItem from="1763435799789" duration="21046000" />
-      <workItem from="1763515546671" duration="17181000" />
+      <workItem from="1763515546671" duration="24875000" />
+      <workItem from="1763608137428" duration="10639000" />
     </task>
     <servers />
   </component>
@@ -102,12 +115,14 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/liandan$ResNet.coverage" NAME="ResNet 覆盖结果" MODIFIED="1763459832305" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/code" />
     <SUITE FILE_PATH="coverage/liandan$MobileNet.coverage" NAME="MobileNet 覆盖结果" MODIFIED="1763521144756" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/code" />
+    <SUITE FILE_PATH="coverage/liandan$pipei.coverage" NAME="pipei 覆盖结果" MODIFIED="1763710171425" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/liandan$main.coverage" NAME="main 覆盖结果" MODIFIED="1763442786840" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/code" />
     <SUITE FILE_PATH="coverage/liandan$test_mobilenet.coverage" NAME="test_mobilenet 覆盖结果" MODIFIED="1763524144890" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/code" />
     <SUITE FILE_PATH="coverage/liandan$EfficientNet_B3.coverage" NAME="EfficientNet-B3 覆盖结果" MODIFIED="1763550618355" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/code" />
     <SUITE FILE_PATH="coverage/liandan$test_efficientnet.coverage" NAME="test_efficientnet 覆盖结果" MODIFIED="1763550640069" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/code" />
-    <SUITE FILE_PATH="coverage/liandan$test_resnet50.coverage" NAME="test_resnet50 覆盖结果" MODIFIED="1763518085427" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/code" />
+    <SUITE FILE_PATH="coverage/liandan$cleandata.coverage" NAME="cleandata 覆盖结果" MODIFIED="1763707215909" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/liandan$test_resnet50.coverage" NAME="test_resnet50 覆盖结果" MODIFIED="1763608196726" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/code" />
     <SUITE FILE_PATH="coverage/liandan$test.coverage" NAME="test 覆盖结果" MODIFIED="1763441950436" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/liandan$ResNet50.coverage" NAME="ResNet50 覆盖结果" MODIFIED="1763464104832" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/code" />
+    <SUITE FILE_PATH="coverage/liandan$ResNet50.coverage" NAME="ResNet50 覆盖结果" MODIFIED="1763559899229" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/code" />
   </component>
 </project>

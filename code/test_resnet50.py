@@ -9,6 +9,8 @@ Test ResNet50 on HAM10000 with saved weights
 """
 
 import os
+import torch.nn as nn
+from ResNet50 import HAM10000Dataset, plot_confusion_matrix, CBAMBlock
 from glob import glob
 import numpy as np
 import pandas as pd
@@ -32,12 +34,26 @@ from ResNet50 import HAM10000Dataset, plot_confusion_matrix
 
 
 def load_model(weight_path, num_classes=7, device=torch.device("cpu")):
+    # 1. 先建一个“干净的” resnet50
     model = resnet50(weights=None)
+
+    # 2. 按训练脚本里的方式，在 layer4 后面接上 CBAM，并包一层 Sequential
+    #    这样名字结构就会变成 layer4.0.* 和 layer4.1.ca.*，和保存权重里的 key 一致
+    model.layer4 = nn.Sequential(
+        model.layer4,                     # 原来的 layer4 (Sequential of Bottleneck blocks)
+        CBAMBlock(in_planes=2048, reduction=16, kernel_size=7)
+    )
+
+    # 3. 替换最后的全连接层，和训练时保持一致
     num_ftrs = model.fc.in_features
-    model.fc = torch.nn.Linear(num_ftrs, num_classes)
+    model.fc = nn.Linear(num_ftrs, num_classes)
+
+    # 4. 加载权重
     state_dict = torch.load(weight_path, map_location=device)
-    model.load_state_dict(state_dict)
+    model.load_state_dict(state_dict, strict=True)  # strict=True 确保完全匹配
+
     return model
+
 
 
 def ensure_dir(path):
@@ -53,7 +69,7 @@ def main():
     PICS_DIR = os.path.join(BASE_DIR, "pics")
     ensure_dir(PICS_DIR)  # 创建 pics 文件夹
 
-    weight_path = os.path.join(BASE_DIR, "best_resnet50_ham10000.pth")
+    weight_path = os.path.join(BASE_DIR, "best_resnet50_ham10000_cbam_focal.pth")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Using device:", device)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-HAM10000 ResNet50 training script (Windows safe, GPU enabled)
+HAM10000 ResNet50 + CBAM + FocalLoss training script (Windows safe, GPU enabled)
 """
 
 # ====== 基本库 ======
@@ -21,6 +21,7 @@ from torch import optim, nn
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from torchvision.models import resnet50, ResNet50_Weights
+import torch.nn.functional as F  # 为 FocalLoss 使用
 
 # ====== Sklearn ======
 from sklearn.metrics import confusion_matrix, classification_report
@@ -113,6 +114,99 @@ def set_parameter_requires_grad(model, feature_extracting: bool):
             param.requires_grad = False
 
 
+# =========== CBAM 注意力模块 ===========
+
+class ChannelAttention(nn.Module):
+    def __init__(self, in_planes, reduction=16):
+        super(ChannelAttention, self).__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.max_pool = nn.AdaptiveMaxPool2d(1)
+
+        self.fc1 = nn.Conv2d(in_planes, in_planes // reduction, 1, bias=False)
+        self.relu = nn.ReLU(inplace=True)
+        self.fc2 = nn.Conv2d(in_planes // reduction, in_planes, 1, bias=False)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        avg_out = self.fc2(self.relu(self.fc1(self.avg_pool(x))))
+        max_out = self.fc2(self.relu(self.fc1(self.max_pool(x))))
+        out = avg_out + max_out
+        return self.sigmoid(out)
+
+
+class SpatialAttention(nn.Module):
+    def __init__(self, kernel_size=7):
+        super(SpatialAttention, self).__init__()
+        assert kernel_size in (3, 7)
+        padding = 3 if kernel_size == 7 else 1
+
+        self.conv = nn.Conv2d(2, 1, kernel_size, padding=padding, bias=False)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        # 在通道维度上做 max/avg pooling
+        avg_out = torch.mean(x, dim=1, keepdim=True)
+        max_out, _ = torch.max(x, dim=1, keepdim=True)
+        x_cat = torch.cat([avg_out, max_out], dim=1)
+        x_out = self.conv(x_cat)
+        return self.sigmoid(x_out)
+
+
+class CBAMBlock(nn.Module):
+    def __init__(self, in_planes, reduction=16, kernel_size=7):
+        super(CBAMBlock, self).__init__()
+        self.ca = ChannelAttention(in_planes, reduction)
+        self.sa = SpatialAttention(kernel_size)
+
+    def forward(self, x):
+        out = x * self.ca(x)
+        out = out * self.sa(out)
+        return out
+
+
+# =========== Focal Loss ===========
+
+class FocalLoss(nn.Module):
+    """
+    多分类 Focal Loss
+    inputs: [N, C], targets: [N]
+    """
+    def __init__(self, alpha=None, gamma=2.0, reduction="mean"):
+        super(FocalLoss, self).__init__()
+        if isinstance(alpha, (list, np.ndarray)):
+            self.alpha = torch.tensor(alpha, dtype=torch.float32)
+        else:
+            self.alpha = alpha  # 可以是 float 或 None
+        self.gamma = gamma
+        self.reduction = reduction
+
+    def forward(self, inputs, targets):
+        # inputs: logits [N, C]
+        # targets: [N]
+        if inputs.dim() > 2:
+            inputs = inputs.view(inputs.size(0), inputs.size(1), -1)
+            inputs = inputs.transpose(1, 2)
+            inputs = inputs.contiguous().view(-1, inputs.size(2))
+        targets = targets.view(-1)
+
+        if self.alpha is not None:
+            if self.alpha.device != inputs.device:
+                self.alpha = self.alpha.to(inputs.device)
+            ce_loss = F.cross_entropy(inputs, targets, reduction="none", weight=self.alpha)
+        else:
+            ce_loss = F.cross_entropy(inputs, targets, reduction="none")
+
+        pt = torch.exp(-ce_loss)  # pt = prob of correct class
+        loss = (1 - pt) ** self.gamma * ce_loss
+
+        if self.reduction == "mean":
+            return loss.mean()
+        elif self.reduction == "sum":
+            return loss.sum()
+        else:
+            return loss
+
+
 def initialize_model(model_name: str, num_classes: int,
                      feature_extract: bool, use_pretrained: bool = True):
     model_ft = None
@@ -124,6 +218,14 @@ def initialize_model(model_name: str, num_classes: int,
         else:
             weights = None
         model_ft = resnet50(weights=weights)
+
+        # === 在 layer4 后面加一个 CBAMBlock（通道数为 2048） ===
+        # 原来的 layer4 输出是 [N, 2048, H, W]
+        model_ft.layer4 = nn.Sequential(
+            model_ft.layer4,
+            CBAMBlock(in_planes=2048, reduction=16, kernel_size=7)
+        )
+
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.fc.in_features
         model_ft.fc = nn.Linear(num_ftrs, num_classes)
@@ -387,7 +489,8 @@ def main():
 
     # ========== 13. 优化器 & 损失函数 ==========
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
-    criterion = nn.CrossEntropyLoss().to(device)
+    # 换成 FocalLoss，其他代码不变
+    criterion = FocalLoss(gamma=2.0, reduction="mean").to(device)
 
     # ========== 14. 训练循环 ==========
     epoch_num = 10
@@ -395,7 +498,7 @@ def main():
     total_loss_train, total_acc_train = [], []
     total_loss_val, total_acc_val = [], []
 
-    best_model_path = "../best_resnet50_ham10000.pth"
+    best_model_path = "../best_resnet50_ham10000_cbam_focal.pth"
 
     for epoch in tqdm(range(1, epoch_num + 1)):
         loss_train, acc_train = train_one_epoch(
