@@ -5,19 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a132803e-e457-49cc-b345-f8798986e4ad" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/cleandata.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pipei.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/best_efficientnet_b3_ham10000.pth" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/best_mobilenet_ham10000.pth" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/best_resnet50_ham10000.pth" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/ResNet50.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/ResNet50.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/test_resnet50.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/test_resnet50.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pics/classification_report.txt" beforeDir="false" afterPath="$PROJECT_DIR$/pics/classification_report.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pics/confusion_matrix.png" beforeDir="false" afterPath="$PROJECT_DIR$/pics/confusion_matrix.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pics/pr_curves.png" beforeDir="false" afterPath="$PROJECT_DIR$/pics/pr_curves.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pics/roc_curves.png" beforeDir="false" afterPath="$PROJECT_DIR$/pics/roc_curves.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ISIC_dataset2/PAT_13_21_350.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ISIC_dataset2/PAT_14_22_850.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ISIC_dataset2/PAT_15_1001_749.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ISIC_dataset2/PAT_15_23_240.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ISIC_dataset2/PAT_15_3138_959.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ISIC_dataset2/PAT_16_24_691.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ISIC_dataset2/PAT_20_29_850.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ISIC_dataset2/PAT_21_31_965.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ISIC_dataset2/PAT_21_982_266.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ISIC_dataset2/PAT_26_37_865.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ISIC_dataset2/PAT_8_15_820.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ISIC_dataset2/PAT_9_17_80.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/metadata_isic_with_shape.csv" beforeDir="false" afterPath="$PROJECT_DIR$/metadata_isic_with_shape.csv" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,32 +57,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.EfficientNet-B3.executor": "Run",
-    "Python.MobileNet.executor": "Run",
-    "Python.ResNet.executor": "Run",
-    "Python.ResNet50.executor": "Run",
-    "Python.cleandata.executor": "Run",
-    "Python.main.executor": "Run",
-    "Python.pipei.executor": "Run",
-    "Python.test.executor": "Run",
-    "Python.test_efficientnet.executor": "Run",
-    "Python.test_mobilenet.executor": "Run",
-    "Python.test_resnet50.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "vision__model",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.EfficientNet-B3.executor&quot;: &quot;Run&quot;,
+    &quot;Python.MobileNet.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ResNet.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ResNet50.executor&quot;: &quot;Run&quot;,
+    &quot;Python.cleandata.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.pipei.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_efficientnet.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_mobilenet.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_resnet50.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;vision__model&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\zhangrx59\PycharmProjects\liandan" />
@@ -106,6 +107,7 @@
       <workItem from="1763435799789" duration="21046000" />
       <workItem from="1763515546671" duration="24875000" />
       <workItem from="1763608137428" duration="10639000" />
+      <workItem from="1763710542040" duration="4637000" />
     </task>
     <servers />
   </component>
