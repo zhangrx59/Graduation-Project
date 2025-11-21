@@ -10,7 +10,7 @@ from multiprocessing import Pool
 from openai import OpenAI
 from collections import Counter
 
- 
+
 def load_config(config_path="config.json"):
     """从JSON文件加载配置"""
     try:
