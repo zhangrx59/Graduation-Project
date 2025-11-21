@@ -25,8 +25,8 @@
   },
 
   "analysis_config": {
-    "folder_path": "C:/Users/zhangrx59/PycharmProjects/liandan/ISIC_dataset",
-    "csv_file_path": "C:/Users/zhangrx59/PycharmProjects/liandan/metadata_isic.csv",
+    "folder_path": "C:/Users/zhangrx59/PycharmProjects/LoRA/ISIC_dataset",
+    "csv_file_path": "C:/Users/zhangrx59/PycharmProjects/LoRA/metadata_isic.csv",
     "supported_formats": [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".gif"],
     "max_workers": 8,
     "image_id_column": "image_id",

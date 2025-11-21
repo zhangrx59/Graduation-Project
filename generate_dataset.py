@@ -234,5 +234,5 @@ def annotate_image_shapes(config_path="config.json",
 
 if __name__ == "__main__":
     print("🚀 启动皮肤病变“形状”标注程序（基于 Qwen-VL，方案一：只处理有图片的行）...")
-    annotate_image_shapes("config3.json")
+    annotate_image_shapes("config.json")
     print("✅ 全部完成。")
