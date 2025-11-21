@@ -18,7 +18,23 @@
       "sk-lcgpikfiodippozppgyzmbiqkdvzwghsqctejlhoynmmancr",
       "sk-dthsynhofcacehizbaweldnfxqzfghiftcbpfrexrnvtxizb",
       "sk-kxxlcfiinappvixispzcyinxxkdzifwpgxqluhrvqsrpfdom",
-      "sk-fyjwilrmshievjjwwdtfvstlexlndwtwokhpjxxlalfrvgtp"
+      "sk-fyjwilrmshievjjwwdtfvstlexlndwtwokhpjxxlalfrvgtp",
+      "sk-lmlohnxjvpdodotknduecncvqlweaermkjnnjluxbkhdjlgt",
+      "sk-cqesdueldlmrlacervcppvwwdnumsyjaefqjencdjmomzxvq",
+      "sk-vzhxbvwffkfvbcdqqsbbadmqxcsslbnryvhbfxhbyycufobp",
+      "sk-tdcbofhwveaswtbtjvpjnsvqmedqpqwrcohefdrgkttmqmox",
+      "sk-tubfewuezfqisbpcirclqeslkogztcjelxdredpdwstelhbl",
+      "sk-inhubquyrsnszasfkisibtmuibpqvwdakafnooohztkpzjuh",
+      "sk-vtoskptncbycyqjunvfhruchtwhrxnbiymgsnkfxinlmjkwa",
+      "sk-mdrqllehmytbfmeyhmyoizyhvudanbflqgwxuviiweuybkmm",
+      "sk-utlnqcauacggimdnjcpeebnlrsvlichojccmjdfeerbvzllm",
+      "sk-atloaeckmhuxeqovntahmfwstbmwuarhbusqjtnydjdsbesc",
+      "sk-seljjgnoghqcntnajnauvymnqyqyshlntushvjsookhisibf",
+      "sk-owgxnhchieoexxcwpoxwjxfewrimdsdytpsjhpxcfyqgarqw",
+      "sk-wmobbwjgbcmluzfcikzqwcclpwtdvrdgorrluutlmlqstpkm",
+      "sk-kcotiuxgwwxpsxonhofobawrvsvaqzehagaonnodqehzqamz",
+      "sk-nwlulvtorlinrczujorcxdfcmxjqptqszowoxksjcswnkwkz",
+      "sk-vkddokwxsiexrlrnnqjxsqcenudmnuncgnpfwcpkalbhliyr"
     ],
     "timeout": 30,
     "max_retries": 2
@@ -28,7 +44,7 @@
     "folder_path": "C:/Users/zhangrx59/PycharmProjects/LoRA/ISIC_dataset",
     "csv_file_path": "C:/Users/zhangrx59/PycharmProjects/LoRA/metadata_isic.csv",
     "supported_formats": [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".gif"],
-    "max_workers": 8,
+    "max_workers": 2,
     "image_id_column": "image_id",
     "clinical_columns": ["age", "sex", "localization"]
   },
