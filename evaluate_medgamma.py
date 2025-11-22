@@ -1,4 +1,4 @@
-# evaluate_medgemma_baseline_testset.py
+# evaluate_medgemma_lora_testset.py
 # -*- coding: utf-8 -*-
 
 import os
@@ -12,6 +12,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 from transformers import AutoModelForImageTextToText, AutoProcessor
+from peft import PeftModel
 
 from sklearn.metrics import (
     classification_report,
@@ -24,25 +25,22 @@ from sklearn.metrics import (
 from sklearn.preprocessing import label_binarize
 
 
-# ========== 路径 & 配置（需与微调脚本一致） ==========
+# ========== 路径 & 配置（需与训练脚本保持一致） ==========
 
 BASE_MODEL = "google/medgemma-4b-it"
-
-# 原始 metadata CSV
 METADATA_CSV = r"C:\Users\zhangrx59\PycharmProjects\LoRA\metadata_isic_with_shape.csv"
 
-# 微调脚本中 prepare_splits() 生成的 test CSV
+# 对应训练脚本里自动生成的 test CSV
 TEST_CSV = METADATA_CSV.replace(".csv", "_test_5cls.csv")
 
-# 图像根目录和后缀
-IMAGE_ROOT_DIR = r"C:\Users\zhangrx59\PycharmProjects\LoRA\ISIC_dataset"
-IMAGE_EXT = ".png"   # 如果是 .jpg 改成 ".jpg"
+OUTPUT_DIR = r"C:\Users\zhangrx59\PycharmProjects\LoRA\medgemma_lora_derm_from_metadata"
 
-# 评估图像保存目录（基座模型的结果单独放一个目录）
-PLOTS_DIR = r"C:\Users\zhangrx59\PycharmProjects\LoRA\baseline"
+IMAGE_ROOT_DIR = r"C:\Users\zhangrx59\PycharmProjects\LoRA\ISIC_dataset"
+IMAGE_EXT = ".png"
+
+PLOTS_DIR = r"C:\Users\zhangrx59\PycharmProjects\LoRA\medgemma_eval_plots_5cls"
 os.makedirs(PLOTS_DIR, exist_ok=True)
 
-# 列名（与微调脚本保持一致）
 COL_IMAGE_ID    = "image_id"
 COL_AGE         = "年龄"
 COL_SEX         = "性别"
@@ -67,13 +65,12 @@ COL_MORPH_CHANGE= "形态变化"
 COL_BLEEDING    = "出血"
 COL_ELEVATED    = "是否隆起"
 
-COL_TARGET      = "dx"   # 如果你的列名是“诊断标签”，这里改成 "诊断标签"
+COL_TARGET      = "dx"
 
-# 只评估这 5 类
-ALLOWED_DX = ["akiec", "bcc", "bkl", "nev", "mel"]
+ALLOWED_DX = ["akiec", "bcc", "bkl", "nev", "mel"]  # 有序列表便于画图
 
 
-# ========== 一些工具函数（和微调脚本一致） ==========
+# ========== 工具函数（与训练保持一致） ==========
 
 def yn_str(v, yes="有", no="无", unk="不详"):
     if isinstance(v, str):
@@ -86,7 +83,7 @@ def yn_str(v, yes="有", no="无", unk="不详"):
             return unk
     if isinstance(v, (bool, int)):
         return yes if bool(v) else no
-    if v != v:  # NaN
+    if v != v:
         return unk
     return str(v)
 
@@ -118,7 +115,6 @@ def build_clinical_note(row: pd.Series) -> str:
     bleeding = yn_str(row.get(COL_BLEEDING))
     elevated = yn_str(row.get(COL_ELEVATED))
 
-    # 性别汉化
     if isinstance(sex, str) and sex.upper() in ["MALE", "M"]:
         sex_cn = "男性"
     elif isinstance(sex, str) and sex.upper() in ["FEMALE", "F"]:
@@ -171,10 +167,6 @@ def normalize_dx(label: str) -> str:
 
 
 def extract_dx_code(text: str) -> str:
-    """
-    从模型输出文本中提取 5 类 dx code：
-    - 支持 nv/nev，统一成 nev
-    """
     if not isinstance(text, str):
         return "unknown"
     text_lower = text.lower()
@@ -186,42 +178,39 @@ def extract_dx_code(text: str) -> str:
     return code if code in ALLOWED_DX else "unknown"
 
 
-# ========== 加载基座模型（不加载 LoRA） ==========
+# ========== 模型加载 ==========
 
-def load_baseline_model_and_processor():
+def load_model_and_processor():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"🔧 使用设备: {device}")
 
-    print("🔧 加载 MedGEMMA 基座模型（未微调版本） ...")
-    model = AutoModelForImageTextToText.from_pretrained(
+    print("🔧 加载基础模型 ...")
+    model_base = AutoModelForImageTextToText.from_pretrained(
         BASE_MODEL,
         dtype=torch.bfloat16 if device.type == "cuda" else torch.float32,
     )
+
+    print(f"🔧 加载 LoRA 适配器: {OUTPUT_DIR}")
+    model = PeftModel.from_pretrained(model_base, OUTPUT_DIR)
     model.to(device)
     model.eval()
 
-    processor = AutoProcessor.from_pretrained(BASE_MODEL)
+    processor = AutoProcessor.from_pretrained(OUTPUT_DIR)
     processor.tokenizer.padding_side = "right"
 
     return model, processor, device
 
 
-# ========== 使用 Test 集评估基座模型 ==========
+# ========== 评估主函数 ==========
 
-def evaluate_baseline_on_test():
-    if not os.path.exists(TEST_CSV):
-        raise FileNotFoundError(
-            f"未找到测试集 CSV: {TEST_CSV}\n"
-            f"请先运行你的微调脚本（包含 prepare_splits()）生成 *_test_5cls.csv。"
-        )
-
+def evaluate_on_test():
     df = pd.read_csv(TEST_CSV, encoding="utf-8")
     print(f"📄 从 Test CSV 读取 {len(df)} 条样本: {TEST_CSV}")
 
     if COL_IMAGE_ID not in df.columns or COL_TARGET not in df.columns:
         raise ValueError("TEST_CSV 中缺少 image_id 或 dx 列")
 
-    model, processor, device = load_baseline_model_and_processor()
+    model, processor, device = load_model_and_processor()
 
     y_true, y_pred = [], []
     total, correct = 0, 0
@@ -249,7 +238,6 @@ def evaluate_baseline_on_test():
 
         clinical_note = build_clinical_note(row)
 
-        # prompt：和微调时保持同一个任务定义，只是模型未微调
         messages = [
             {
                 "role": "system",
@@ -321,13 +309,15 @@ def evaluate_baseline_on_test():
             f"| {'✅' if pred_label == label_raw else '❌'} | raw={gen_text!r}"
         )
 
-    print("\n====== 📊 基座模型在 Test 集上的评估结果 ======")
+    print("\n====== 📊 Test 集评估结果 ======")
     print(f"有效样本数: {total}")
     print(f"缺少图片样本数: {missing_image}")
     if total > 0:
         print(f"总体准确率: {correct/total:.2%}")
     else:
         print("没有有效样本")
+
+    if total == 0:
         return
 
     # ===== 指标 + 混淆矩阵 + ROC/PR 曲线 =====
@@ -353,7 +343,7 @@ def evaluate_baseline_on_test():
     ax_cm.set_yticklabels(classes)
     ax_cm.set_xlabel("Predicted label")
     ax_cm.set_ylabel("True label")
-    ax_cm.set_title("Confusion Matrix (Baseline, 5 classes)")
+    ax_cm.set_title("Confusion Matrix (5 classes)")
     plt.setp(ax_cm.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
     thresh = cm.max() / 2.0 if cm.max() > 0 else 0.5
@@ -366,12 +356,12 @@ def evaluate_baseline_on_test():
             )
 
     fig_cm.tight_layout()
-    cm_path = os.path.join(PLOTS_DIR, "confusion_matrix.png")
+    cm_path = os.path.join(PLOTS_DIR, "confusion_matrix_5cls.png")
     fig_cm.savefig(cm_path, dpi=300)
     plt.close(fig_cm)
     print(f"📁 混淆矩阵图已保存到: {cm_path}")
 
-    # ROC & PR（同样使用 one-hot 预测当作 score 近似）
+    # ROC & PR（用 one-hot 预测当作 score 近似）
     y_true_bin = label_binarize(y_true_arr, classes=classes)
     scores = np.zeros_like(y_true_bin, dtype=float)
     for i, pred in enumerate(y_pred_arr):
@@ -394,10 +384,10 @@ def evaluate_baseline_on_test():
     ax_roc.set_ylim([0.0, 1.05])
     ax_roc.set_xlabel("False Positive Rate")
     ax_roc.set_ylabel("True Positive Rate")
-    ax_roc.set_title("ROC Curves (Baseline, 5 classes, pseudo-scores)")
+    ax_roc.set_title("ROC Curves (5 classes, pseudo-scores)")
     ax_roc.legend(loc="lower right", fontsize=8)
     fig_roc.tight_layout()
-    roc_path = os.path.join(PLOTS_DIR, "roc_curve.png")
+    roc_path = os.path.join(PLOTS_DIR, "roc_curves_5cls.png")
     fig_roc.savefig(roc_path, dpi=300)
     plt.close(fig_roc)
     print(f"📁 ROC 曲线图已保存到: {roc_path}")
@@ -418,10 +408,10 @@ def evaluate_baseline_on_test():
     ax_pr.set_ylim([0.0, 1.05])
     ax_pr.set_xlabel("Recall")
     ax_pr.set_ylabel("Precision")
-    ax_pr.set_title("Precision-Recall Curves (Baseline, 5 classes, pseudo-scores)")
+    ax_pr.set_title("Precision-Recall Curves (5 classes, pseudo-scores)")
     ax_pr.legend(loc="lower left", fontsize=8)
     fig_pr.tight_layout()
-    pr_path = os.path.join(PLOTS_DIR, "pr_curve.png")
+    pr_path = os.path.join(PLOTS_DIR, "pr_curves_5cls.png")
     fig_pr.savefig(pr_path, dpi=300)
     plt.close(fig_pr)
     print(f"📁 P-R 曲线图已保存到: {pr_path}")
@@ -429,4 +419,4 @@ def evaluate_baseline_on_test():
 
 if __name__ == "__main__":
     warnings.filterwarnings("once")
-    evaluate_baseline_on_test()
+    evaluate_on_test()
