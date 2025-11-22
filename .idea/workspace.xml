@@ -4,15 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="298a7252-b432-4b2d-86ef-9ba37e173337" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/call_medgamma.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/LoRA.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/LoRA.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/medgamma.py" beforeDir="false" afterPath="$PROJECT_DIR$/LoRA_medgamma.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/metadata_isic_with_shape - 副本.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/metadata_isic_with_shape.csv" beforeDir="false" afterPath="$PROJECT_DIR$/metadata_isic_with_shape.csv" afterDir="false" />
-    </list>
+    <list default="true" id="298a7252-b432-4b2d-86ef-9ba37e173337" name="更改" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -81,7 +73,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1763719256304</updated>
-      <workItem from="1763719257338" duration="25817000" />
+      <workItem from="1763719257338" duration="26173000" />
     </task>
     <servers />
   </component>
