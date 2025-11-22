@@ -1,4 +1,4 @@
-# evaluate_medgemma_lora_testset.py
+# evaluate_medgamma_lora.py
 # -*- coding: utf-8 -*-
 
 import os
@@ -25,22 +25,32 @@ from sklearn.metrics import (
 from sklearn.preprocessing import label_binarize
 
 
-# ========== 路径 & 配置（需与训练脚本保持一致） ==========
+# ========== 路径 & 配置（需与微调脚本一致） ==========
 
+# 基础模型
 BASE_MODEL = "google/medgemma-4b-it"
+
+# 原始 metadata CSV（和微调用的是同一个）
 METADATA_CSV = r"C:\Users\zhangrx59\PycharmProjects\LoRA\metadata_isic_with_shape.csv"
 
-# 对应训练脚本里自动生成的 test CSV
+# 微调脚本 prepare_splits() 生成的 test CSV
 TEST_CSV = METADATA_CSV.replace(".csv", "_test_5cls.csv")
 
-OUTPUT_DIR = r"C:\Users\zhangrx59\PycharmProjects\LoRA\medgemma_lora_derm_from_metadata"
+# LoRA 适配器输出目录（微调脚本里用的 OUTPUT_DIR）
+LORA_DIR = r"C:\Users\zhangrx59\PycharmProjects\LoRA\medgemma_lora_derm_from_metadata"
 
+# 图像根目录和后缀
 IMAGE_ROOT_DIR = r"C:\Users\zhangrx59\PycharmProjects\LoRA\ISIC_dataset"
-IMAGE_EXT = ".png"
+IMAGE_EXT = ".png"   # 如果是 .jpg 就改成 ".jpg"
 
-PLOTS_DIR = r"C:\Users\zhangrx59\PycharmProjects\LoRA\medgemma_eval_plots_5cls"
+# 评估图像保存目录（LoRA 结果单独放一个目录）
+PLOTS_DIR = r"C:\Users\zhangrx59\PycharmProjects\LoRA\lora_eval"
 os.makedirs(PLOTS_DIR, exist_ok=True)
 
+# 批大小
+BATCH_SIZE = 32
+
+# 列名（与微调脚本保持一致）
 COL_IMAGE_ID    = "image_id"
 COL_AGE         = "年龄"
 COL_SEX         = "性别"
@@ -65,12 +75,14 @@ COL_MORPH_CHANGE= "形态变化"
 COL_BLEEDING    = "出血"
 COL_ELEVATED    = "是否隆起"
 
+# 皮肤病分类标签列（和微调时一致）
 COL_TARGET      = "dx"
 
-ALLOWED_DX = ["akiec", "bcc", "bkl", "nev", "mel"]  # 有序列表便于画图
+# 只评估这 5 类（你现在的实验设定）
+ALLOWED_DX = ["akiec", "bcc", "bkl", "nev", "mel"]
 
 
-# ========== 工具函数（与训练保持一致） ==========
+# ========== 一些工具函数 ==========
 
 def yn_str(v, yes="有", no="无", unk="不详"):
     if isinstance(v, str):
@@ -83,7 +95,7 @@ def yn_str(v, yes="有", no="无", unk="不详"):
             return unk
     if isinstance(v, (bool, int)):
         return yes if bool(v) else no
-    if v != v:
+    if v != v:  # NaN
         return unk
     return str(v)
 
@@ -115,6 +127,7 @@ def build_clinical_note(row: pd.Series) -> str:
     bleeding = yn_str(row.get(COL_BLEEDING))
     elevated = yn_str(row.get(COL_ELEVATED))
 
+    # 性别汉化
     if isinstance(sex, str) and sex.upper() in ["MALE", "M"]:
         sex_cn = "男性"
     elif isinstance(sex, str) and sex.upper() in ["FEMALE", "F"]:
@@ -167,6 +180,10 @@ def normalize_dx(label: str) -> str:
 
 
 def extract_dx_code(text: str) -> str:
+    """
+    从模型输出文本中提取 5 类 dx code：
+    - 支持 nv/nev，统一成 nev
+    """
     if not isinstance(text, str):
         return "unknown"
     text_lower = text.lower()
@@ -178,45 +195,51 @@ def extract_dx_code(text: str) -> str:
     return code if code in ALLOWED_DX else "unknown"
 
 
-# ========== 模型加载 ==========
+# ========== 加载 LoRA 微调后的模型 ==========
 
-def load_model_and_processor():
+def load_lora_model_and_processor():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"🔧 使用设备: {device}")
 
-    print("🔧 加载基础模型 ...")
-    model_base = AutoModelForImageTextToText.from_pretrained(
+    print("🔧 加载 MedGEMMA 基础模型 ...")
+    base_model = AutoModelForImageTextToText.from_pretrained(
         BASE_MODEL,
         dtype=torch.bfloat16 if device.type == "cuda" else torch.float32,
-    )
+    ).to(device)
 
-    print(f"🔧 加载 LoRA 适配器: {OUTPUT_DIR}")
-    model = PeftModel.from_pretrained(model_base, OUTPUT_DIR)
-    model.to(device)
+    print(f"🔧 从 {LORA_DIR} 加载 LoRA 适配器 ...")
+    model = PeftModel.from_pretrained(base_model, LORA_DIR)
     model.eval()
 
-    processor = AutoProcessor.from_pretrained(OUTPUT_DIR)
+    # processor 从 LoRA 目录加载，保证 tokenizer 配置一致
+    processor = AutoProcessor.from_pretrained(LORA_DIR)
     processor.tokenizer.padding_side = "right"
 
     return model, processor, device
 
 
-# ========== 评估主函数 ==========
+# ========== 使用 Test 集评估 LoRA 模型（批量） ==========
 
-def evaluate_on_test():
+def evaluate_lora_on_test():
+    if not os.path.exists(TEST_CSV):
+        raise FileNotFoundError(
+            f"未找到测试集 CSV: {TEST_CSV}\n"
+            f"请先运行微调脚本生成 *_test_5cls.csv。"
+        )
+
     df = pd.read_csv(TEST_CSV, encoding="utf-8")
     print(f"📄 从 Test CSV 读取 {len(df)} 条样本: {TEST_CSV}")
 
     if COL_IMAGE_ID not in df.columns or COL_TARGET not in df.columns:
         raise ValueError("TEST_CSV 中缺少 image_id 或 dx 列")
 
-    model, processor, device = load_model_and_processor()
+    model, processor, device = load_lora_model_and_processor()
 
     y_true, y_pred = [], []
     total, correct = 0, 0
     missing_image = 0
 
-    for _, row in df.iterrows():
+    for idx, row in df.iterrows():
         image_id = str(row[COL_IMAGE_ID])
         label_raw = normalize_dx(str(row[COL_TARGET]))
 
@@ -286,14 +309,14 @@ def evaluate_on_test():
         ).to(device)
 
         with torch.no_grad():
-            generated_ids = model.generate(
+            outputs = model.generate(
                 **inputs,
                 max_new_tokens=8,
                 do_sample=False,
             )
 
         input_len = inputs["input_ids"].shape[1]
-        gen_ids = generated_ids[:, input_len:]
+        gen_ids = outputs[:, input_len:]
         gen_text = processor.batch_decode(gen_ids, skip_special_tokens=True)[0]
         pred_label = extract_dx_code(gen_text)
 
@@ -309,15 +332,17 @@ def evaluate_on_test():
             f"| {'✅' if pred_label == label_raw else '❌'} | raw={gen_text!r}"
         )
 
-    print("\n====== 📊 Test 集评估结果 ======")
+    print("\n====== 📊 LoRA 模型在 Test 集上的评估结果（逐条） ======")
     print(f"有效样本数: {total}")
     print(f"缺少图片样本数: {missing_image}")
     if total > 0:
         print(f"总体准确率: {correct/total:.2%}")
+
+    # （其余部分不变：混淆矩阵 / ROC / PR 图生成）
+    # ...
+
     else:
         print("没有有效样本")
-
-    if total == 0:
         return
 
     # ===== 指标 + 混淆矩阵 + ROC/PR 曲线 =====
@@ -343,7 +368,7 @@ def evaluate_on_test():
     ax_cm.set_yticklabels(classes)
     ax_cm.set_xlabel("Predicted label")
     ax_cm.set_ylabel("True label")
-    ax_cm.set_title("Confusion Matrix (5 classes)")
+    ax_cm.set_title("Confusion Matrix (LoRA, 5 classes, batch)")
     plt.setp(ax_cm.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
     thresh = cm.max() / 2.0 if cm.max() > 0 else 0.5
@@ -356,7 +381,7 @@ def evaluate_on_test():
             )
 
     fig_cm.tight_layout()
-    cm_path = os.path.join(PLOTS_DIR, "confusion_matrix_5cls.png")
+    cm_path = os.path.join(PLOTS_DIR, "confusion_matrix_lora.png")
     fig_cm.savefig(cm_path, dpi=300)
     plt.close(fig_cm)
     print(f"📁 混淆矩阵图已保存到: {cm_path}")
@@ -384,10 +409,10 @@ def evaluate_on_test():
     ax_roc.set_ylim([0.0, 1.05])
     ax_roc.set_xlabel("False Positive Rate")
     ax_roc.set_ylabel("True Positive Rate")
-    ax_roc.set_title("ROC Curves (5 classes, pseudo-scores)")
+    ax_roc.set_title("ROC Curves (LoRA, 5 classes, batch, pseudo-scores)")
     ax_roc.legend(loc="lower right", fontsize=8)
     fig_roc.tight_layout()
-    roc_path = os.path.join(PLOTS_DIR, "roc_curves_5cls.png")
+    roc_path = os.path.join(PLOTS_DIR, "roc_curve_lora.png")
     fig_roc.savefig(roc_path, dpi=300)
     plt.close(fig_roc)
     print(f"📁 ROC 曲线图已保存到: {roc_path}")
@@ -408,10 +433,10 @@ def evaluate_on_test():
     ax_pr.set_ylim([0.0, 1.05])
     ax_pr.set_xlabel("Recall")
     ax_pr.set_ylabel("Precision")
-    ax_pr.set_title("Precision-Recall Curves (5 classes, pseudo-scores)")
+    ax_pr.set_title("Precision-Recall Curves (LoRA, 5 classes, batch, pseudo-scores)")
     ax_pr.legend(loc="lower left", fontsize=8)
     fig_pr.tight_layout()
-    pr_path = os.path.join(PLOTS_DIR, "pr_curves_5cls.png")
+    pr_path = os.path.join(PLOTS_DIR, "pr_curve_lora.png")
     fig_pr.savefig(pr_path, dpi=300)
     plt.close(fig_pr)
     print(f"📁 P-R 曲线图已保存到: {pr_path}")
@@ -419,4 +444,4 @@ def evaluate_on_test():
 
 if __name__ == "__main__":
     warnings.filterwarnings("once")
-    evaluate_on_test()
+    evaluate_lora_on_test()

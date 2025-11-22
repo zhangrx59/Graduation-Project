@@ -5,13 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="298a7252-b432-4b2d-86ef-9ba37e173337" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/a.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/evaluate_medgamma.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/LoRA_medgamma.py" beforeDir="false" afterPath="$PROJECT_DIR$/LoRA_medgamma.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/call_medgamma.py" beforeDir="false" afterPath="$PROJECT_DIR$/call_medgamma.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/metadata_isic.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/metadata_isic_with_shape_with_medgemma_pred.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/evaluate_medgamma.py" beforeDir="false" afterPath="$PROJECT_DIR$/evaluate_medgamma.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,7 +81,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1763719256304</updated>
-      <workItem from="1763719257338" duration="45971000" />
+      <workItem from="1763719257338" duration="49717000" />
     </task>
     <servers />
   </component>
@@ -94,9 +90,9 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/LoRA$call_medgamma.coverage" NAME="call_medgamma 覆盖结果" MODIFIED="1763812192394" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/LoRA$LoRA_medgamma.coverage" NAME="LoRA_medgamma 覆盖结果" MODIFIED="1763813385571" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/LoRA$LoRA_medgamma.coverage" NAME="LoRA_medgamma 覆盖结果" MODIFIED="1763819378427" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/LoRA$generate_dataset.coverage" NAME="generate_dataset 覆盖结果" MODIFIED="1763738130074" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/LoRA$medgamma.coverage" NAME="medgamma 覆盖结果" MODIFIED="1763734883794" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/LoRA$evaluate_medgamma.coverage" NAME="evaluate_medgamma 覆盖结果" MODIFIED="1763796668038" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/LoRA$evaluate_medgamma.coverage" NAME="evaluate_medgamma 覆盖结果" MODIFIED="1763818417478" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

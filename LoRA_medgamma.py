@@ -76,14 +76,17 @@ ALLOWED_DX = ["akiec", "bcc", "bkl", "nev", "mel"]
 OUTPUT_DIR = r"C:\Users\zhangrx59\PycharmProjects\LoRA\medgemma_lora_derm_from_metadata"
 
 
-# ===================== 1. 工具函数：病历摘要拼接 =====================
+# ===================== 1. 工具函数：病历摘要拼接（英文） =====================
 
-def yn_str(v, yes="有", no="无", unk="不详"):
+def yn_str(v, yes="yes", no="no", unk="unknown"):
+    """
+    统一把各种 True/False/UNK/NaN 等映射到英文 yes/no/unknown.
+    """
     if isinstance(v, str):
         vs = v.strip().upper()
-        if vs in ["TRUE", "T", "YES", "Y"]:
+        if vs in ["TRUE", "T", "YES", "Y", "1"]:
             return yes
-        if vs in ["FALSE", "F", "NO", "N"]:
+        if vs in ["FALSE", "F", "NO", "N", "0"]:
             return no
         if vs in ["UNK", "UNKNOWN", "NA", "NAN", "NONE", ""]:
             return unk
@@ -96,75 +99,98 @@ def yn_str(v, yes="有", no="无", unk="不详"):
 
 def build_clinical_note(row) -> str:
     """
-    根据多列字段自动拼接成一段中文病历摘要文本。
+    根据多列字段自动拼接成一段英文病历摘要文本。
+    尽量符合英文医学记录的风格。
     """
     age = row.get(COL_AGE, "")
-    sex = str(row.get(COL_SEX, "") or "").strip()
+    sex_raw = str(row.get(COL_SEX, "") or "").strip().lower()
     region = str(row.get(COL_REGION, "") or "").strip()
     father_ori = str(row.get(COL_FATHER_ORI, "") or "").strip()
     mother_ori = str(row.get(COL_MOTHER_ORI, "") or "").strip()
 
+    # 性别英文化
+    if sex_raw in ["男", "male", "m"]:
+        sex_en = "male"
+    elif sex_raw in ["女", "female", "f"]:
+        sex_en = "female"
+    else:
+        sex_en = "unknown sex"
+
+    # 病史 / 生活方式 / 环境
     skin_ca = yn_str(row.get(COL_SKIN_CANCER))
     other_ca = yn_str(row.get(COL_OTHER_CA))
-    smoke = yn_str(row.get(COL_SMOKE), yes="吸烟", no="不吸烟")
-    drink = yn_str(row.get(COL_DRINK), yes="饮酒", no="不饮酒")
-    pesticide = yn_str(row.get(COL_PESTICIDE), yes="有农药接触史", no="无农药接触史")
+    smoke = yn_str(row.get(COL_SMOKE), yes="smoker", no="non-smoker", unk="unknown smoking status")
+    drink = yn_str(row.get(COL_DRINK), yes="drinker", no="non-drinker", unk="unknown drinking status")
+    pesticide = yn_str(
+        row.get(COL_PESTICIDE),
+        yes="pesticide exposure",
+        no="no pesticide exposure",
+        unk="unknown pesticide exposure"
+    )
 
-    tap = yn_str(row.get(COL_TAP_WATER), yes="有自来水", no="无自来水")
-    sewer = yn_str(row.get(COL_SEWER), yes="有下水道", no="无下水道")
+    tap = yn_str(row.get(COL_TAP_WATER), yes="has tap water", no="no tap water", unk="unknown tap water supply")
+    sewer = yn_str(row.get(COL_SEWER), yes="has sewerage", no="no sewerage", unk="unknown sewerage")
 
     phototype = row.get(COL_PHOTOTYPE, "")
     d1 = row.get(COL_D1, "")
     d2 = row.get(COL_D2, "")
 
-    pruritus = yn_str(row.get(COL_PRURITUS))
-    growth = yn_str(row.get(COL_GROWTH))
-    pain = yn_str(row.get(COL_PAIN))
-    morph_change = yn_str(row.get(COL_MORPH_CHANGE))
-    bleeding = yn_str(row.get(COL_BLEEDING))
-    elevated = yn_str(row.get(COL_ELEVATED))
+    # 症状类，统一成 present/absent/unknown（elevation 单独写成 raised/flat/unknown）
+    pruritus = yn_str(row.get(COL_PRURITUS), yes="present", no="absent", unk="unknown")
+    growth = yn_str(row.get(COL_GROWTH), yes="present", no="absent", unk="unknown")
+    pain = yn_str(row.get(COL_PAIN), yes="present", no="absent", unk="unknown")
+    morph_change = yn_str(row.get(COL_MORPH_CHANGE), yes="present", no="absent", unk="unknown")
+    bleeding = yn_str(row.get(COL_BLEEDING), yes="present", no="absent", unk="unknown")
+    elevated = yn_str(row.get(COL_ELEVATED), yes="raised", no="flat", unk="unknown")
 
-    # 性别汉化
-    if isinstance(sex, str) and sex.upper() in ["MALE", "M"]:
-        sex_cn = "男性"
-    elif isinstance(sex, str) and sex.upper() in ["FEMALE", "F"]:
-        sex_cn = "女性"
-    else:
-        sex_cn = sex or "性别不详"
+    # 部位
+    region_en = region if region else "unknown location"
 
-    region_cn = region or "部位不详"
-
+    # 皮损大小
     size_str = ""
     if d1 and d2:
-        size_str = f"皮损约 {d1}×{d2} mm"
+        size_str = f"Lesion size approximately {d1}×{d2} mm."
     elif d1:
-        size_str = f"皮损最大径约 {d1} mm"
+        size_str = f"Lesion largest diameter approximately {d1} mm."
 
-    photo_str = f"皮肤光型：{phototype} 型" if phototype != "" else ""
+    # 光型
+    photo_str = f"Skin phototype: {phototype}." if phototype != "" else ""
 
+    # 出生地
     origin_str = ""
     if father_ori or mother_ori:
-        origin_str = f"父籍贯：{father_ori}，母籍贯：{mother_ori}。"
+        origin_str = (
+            f"Father's birthplace: {father_ori or 'unknown'}, "
+            f"mother's birthplace: {mother_ori or 'unknown'}."
+        )
 
     parts = []
-    parts.append(f"{age}岁{sex_cn}，{region_cn}皮肤病变。")
+
+    # 基本信息
+    parts.append(f"{age}-year-old {sex_en} with a skin lesion located on {region_en}.")
     if size_str:
-        parts.append(size_str + "。")
+        parts.append(size_str)
     if origin_str:
         parts.append(origin_str)
 
-    parts.append(f"既往皮肤癌病史：{skin_ca}；其他恶性肿瘤病史：{other_ca}。")
-    parts.append(f"生活方式：{smoke}，{drink}，{pesticide}。")
-    parts.append(f"居住环境：{tap}，{sewer}。")
-    if photo_str:
-        parts.append(photo_str + "。")
+    # 病史
+    parts.append(f"History of skin cancer: {skin_ca}; other cancer history: {other_ca}.")
 
+    # 生活方式 + 环境
+    parts.append(f"Lifestyle: {smoke}, {drink}, {pesticide}.")
+    parts.append(f"Living condition: {tap}, {sewer}.")
+    if photo_str:
+        parts.append(photo_str)
+
+    # 症状体征
     parts.append(
-        f"症状体征：瘙痒{pruritus}，是否长大{growth}，疼痛{pain}，"
-        f"形态变化{morph_change}，出血{bleeding}，隆起{elevated}。"
+        f"Symptoms: itching {pruritus}, pain {pain}, growth {growth}, "
+        f"shape change {morph_change}, bleeding {bleeding}, elevation {elevated}."
     )
 
-    return "".join(parts)
+    # 拼成一段英文
+    note = " ".join(parts)
+    return note
 
 
 def normalize_dx(label: str) -> str:
@@ -176,7 +202,7 @@ def normalize_dx(label: str) -> str:
     return s
 
 
-# ===================== 2. 按类别均匀划分 train/val/test（避免泄露） =====================
+# ===================== 2. 按类别均匀划分 train/val/test =====================
 
 def prepare_splits(
     seed: int = 42,
@@ -187,7 +213,7 @@ def prepare_splits(
     """
     从 METADATA_CSV 中：
     - 仅保留 dx ∈ ALLOWED_DX 的样本
-    - 按类别 stratify 划分 train/val/test
+    - 按类别 stratify 划分 train/val/test（目前按图片级别分层）
     - 保存到 *_train_5cls.csv / *_val_5cls.csv / *_test_5cls.csv
     """
     assert abs(train_ratio + val_ratio + test_ratio - 1.0) < 1e-6
@@ -252,7 +278,7 @@ class DermMetadataDataset(Dataset):
     """
     基于划分后的 CSV 的 Dataset：
     - image: 由 图片ID + IMAGE_ROOT_DIR + IMAGE_EXT 拼路径
-    - clinical_note: 由多列字段自动拼接
+    - clinical_note: 由多列字段自动拼接成英文摘要
     - target_text: 皮肤病分类标签（akiec/bcc/bkl/nev/mel），作为生成目标
     """
     def __init__(self, hf_dataset):
@@ -272,7 +298,7 @@ class DermMetadataDataset(Dataset):
         # 标签统一成小写字符串
         target_text = normalize_dx(str(row[COL_TARGET]))
 
-        # 构造多模态对话：
+        # 多模态对话 Prompt（英文）
         messages = [
             {
                 "role": "system",
@@ -280,15 +306,16 @@ class DermMetadataDataset(Dataset):
                     {
                         "type": "text",
                         "text": (
-                            "You are a dermatology assistant. "
-                            "Given the clinical note and the skin lesion image, "
-                            "your task is to classify the skin lesion into one of the following dx codes: "
-                            "akiec, bcc, bkl, nev, mel. "
-                            "Only output ONE code (akiec/bcc/bkl/nev/mel) as the final answer. "
-                            "Do NOT output any other words or explanations."
-                        ),
+                            "You are a medical image classifier for skin lesion diagnosis.\n"
+                            "You must classify the lesion into exactly one of the following classes:\n"
+                            "akiec, bcc, bkl, nev, mel.\n"
+                            "Rules:\n"
+                            "1. Only output one class name.\n"
+                            "2. Do not output probability, explanation, or any extra texts.\n"
+                            "3. The answer must be exactly one of: akiec, bcc, bkl, nev, mel.\n"
+                        )
                     }
-                ],
+                ]
             },
             {
                 "role": "user",
@@ -296,15 +323,16 @@ class DermMetadataDataset(Dataset):
                     {
                         "type": "text",
                         "text": (
-                            "临床病历摘要如下：\n"
-                            f"{clinical_note}\n\n"
-                            "请结合病历和下方的皮肤病变图像，判断该病变最可能属于哪一类，"
-                            "并只输出一个 dx 代码（akiec/bcc/bkl/nev/mel）作为答案："
-                        ),
+                            f"Clinical note:\n{clinical_note}\n\n"
+                            "Based on the clinical note and the provided skin lesion image,\n"
+                            "predict the most likely disease class.\n"
+                            "Answer with only one class name:\n"
+                            "akiec, bcc, bkl, nev, mel."
+                        )
                     },
-                    {"type": "image", "image": image},
-                ],
-            },
+                    {"type": "image", "image": image}
+                ]
+            }
         ]
 
         return {
@@ -332,7 +360,7 @@ class MedGemmaCollator:
                 add_generation_prompt=False,
                 tokenize=False,
             )
-            # 把标签代码拼在后面，作为正确回答
+            # 把标签代码拼在后面，作为“正确回答”
             full_text = chat_text + tgt
             texts.append(full_text)
 
@@ -350,13 +378,13 @@ class MedGemmaCollator:
         return model_inputs
 
 
-# ===================== 5. 加载模型 + LoRA（bf16，全精） =====================
+# ===================== 5. 加载模型 + LoRA（调整超参：更温和的微调） =====================
 
 def load_model_and_processor():
-    print("🔧 加载 MedGemma 基础模型（bf16 + LoRA，全精权重，不用 bitsandbytes）...")
+    print("🔧 加载 MedGEMMA 基础模型（bf16 + LoRA，全精权重，不用 bitsandbytes）...")
     model = AutoModelForImageTextToText.from_pretrained(
         BASE_MODEL,
-        dtype=torch.bfloat16,   # 如果 GPU 不支持 bf16，就改成 torch.float16 并在 TrainingArguments 里 fp16=True
+        dtype=torch.bfloat16,   # 如 GPU 不支持 bfloat16，则改为 torch.float16 并在 TrainingArguments 里 fp16=True
         device_map="auto",
     )
 
@@ -368,10 +396,11 @@ def load_model_and_processor():
     if hasattr(model, "config"):
         model.config.use_cache = False
 
+    # LoRA 配置：更“弱”一点（dropout 提高）
     lora_config = LoraConfig(
         r=16,
         lora_alpha=16,
-        lora_dropout=0.05,
+        lora_dropout=0.1,   # 从 0.05 提高到 0.1，防止过拟合和灾难性遗忘
         bias="none",
         task_type="CAUSAL_LM",
         target_modules="all-linear",
@@ -399,7 +428,7 @@ def main():
     # 1) 先按类别分层划分 train/val/test
     train_csv, val_csv, test_csv = prepare_splits()
 
-    # 2) 用 HF Dataset 只加载 train/val（避免数据泄露）
+    # 2) 用 HF Dataset 只加载 train/val（测试集只留给评估）
     raw = load_dataset(
         "csv",
         data_files={"train": train_csv, "val": val_csv},
@@ -413,22 +442,22 @@ def main():
     model, processor = load_model_and_processor()
     collator = MedGemmaCollator(processor=processor)
 
+    # ===== 这里是关键：调整微调强度（步骤 1） =====
     training_args = TrainingArguments(
         output_dir=OUTPUT_DIR,
-        num_train_epochs=2,
+        num_train_epochs=3,          # 从 10 降到 3，避免过拟合 & 大幅破坏基座
         per_device_train_batch_size=1,
         per_device_eval_batch_size=1,
         gradient_accumulation_steps=8,
-        learning_rate=1e-4,
+        learning_rate=5e-5,          # 从 1e-4 降到 5e-5，更温和
         logging_steps=10,
         save_steps=200,
         save_total_limit=2,
-        bf16=True,  # 如果不支持 bf16 就改成 fp16=True
+        bf16=True,                   # 如报错则改为：bf16=False, fp16=True
         fp16=False,
         report_to="none",
-        remove_unused_columns=False,
-        eval_strategy="steps",  # ← 旧版本 transformers 的写法
-        eval_steps=200,
+        remove_unused_columns=False, # 保留 image/messages 等自定义字段
+        # 不使用 evaluation_strategy，兼容你当前 transformers 版本
     )
 
     trainer = Trainer(
